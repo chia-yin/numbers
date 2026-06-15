@@ -32,7 +32,7 @@
 
   **驗收：** `npm test` 全綠；`npm start` 後 `curl localhost:3000` 回 200。
 
-- [ ] M2: 實作五格計算引擎——純函式，通過 FORMULA.md 第七節黃金測試範例
+- [x] M2: 實作五格計算引擎——純函式，通過 FORMULA.md 第七節黃金測試範例
 
   **交付物：**
   - `src/engine/calculator.js`：匯出純函式

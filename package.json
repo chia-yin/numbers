@@ -1,0 +1,15 @@
+{
+  "name": "gonghao-numbers",
+  "version": "0.1.0",
+  "description": "電話號碼五格數字學工具",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "express": "^5.0.0"
+  }
+}

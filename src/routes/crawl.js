@@ -17,15 +17,15 @@ router.post('/', async (req, res) => {
   if (!source) {
     return res.status(400).json({ error: 'source is required' });
   }
-  if (source.type !== 'text' && source.type !== 'url') {
-    return res.status(400).json({ error: "source.type must be 'text' or 'url'" });
+  if (source.type !== 'text' && source.type !== 'url' && source.type !== 'browser') {
+    return res.status(400).json({ error: "source.type must be 'text', 'url', or 'browser'" });
   }
   if (source.type === 'text' && typeof source.content !== 'string') {
     return res.status(400).json({ error: 'source.content is required for text sources' });
   }
-  if (source.type === 'url') {
+  if (source.type === 'url' || source.type === 'browser') {
     if (typeof source.url !== 'string' || source.url.trim() === '') {
-      return res.status(400).json({ error: 'source.url is required for url sources' });
+      return res.status(400).json({ error: 'source.url is required for url/browser sources' });
     }
     try {
       new URL(source.url);

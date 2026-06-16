@@ -92,16 +92,18 @@ describe('crawler dependencies and config', () => {
     assert.match(pkg.dependencies?.['node-html-parser'] ?? '', /^\^?6\./);
   });
 
-  test('config/sources.json contains default manual and example URL sources', async () => {
+  test('config/sources.json contains manual, browser (FET/CHT) and example sources', async () => {
     const sources = JSON.parse(await readFile(new URL('../config/sources.json', import.meta.url), 'utf8'));
 
     assert.equal(Array.isArray(sources), true);
-    assert.equal(sources.length, 2);
-    assert.equal(sources[0].id, 'manual');
-    assert.equal(sources[0].type, 'text');
-    assert.equal(sources[1].id, 'example-url');
-    assert.equal(sources[1].type, 'url');
-    assert.equal(sources[1].enabled, false);
+    const byId = Object.fromEntries(sources.map((s) => [s.id, s]));
+    assert.equal(byId.manual.type, 'text');
+    assert.equal(byId['fetnet-theme'].type, 'browser');
+    assert.equal(byId['fetnet-theme'].enabled, true);
+    assert.ok(Array.isArray(byId['fetnet-theme'].steps));
+    assert.equal(byId['cht-find-available'].type, 'browser');
+    assert.equal(byId['cht-find-available'].enabled, true);
+    assert.equal(byId['example-url'].enabled, false);
   });
 });
 
@@ -252,7 +254,7 @@ describe('crawler API', () => {
     });
 
     assert.equal(response.status, 400);
-    assert.deepEqual(response.body, { error: "source.type must be 'text' or 'url'" });
+    assert.deepEqual(response.body, { error: "source.type must be 'text', 'url', or 'browser'" });
   });
 
   test('GET /api/crawl/sources returns configured source array', async () => {

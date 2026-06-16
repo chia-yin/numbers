@@ -6,13 +6,37 @@
     "description": "將號碼（一行一個）貼入前端文字框"
   },
   {
+    "id": "fetnet-theme",
+    "name": "遠傳 FET 精選主題門號",
+    "type": "browser",
+    "url": "https://www.fetnet.net/estore/rateplan/theme-number",
+    "delayMs": 1000,
+    "steps": [
+      { "waitMs": 3500 }
+    ],
+    "enabled": true,
+    "note": "JS 動態頁,用無頭瀏覽器渲染後抓全頁 09 開頭號碼。若抓不到,可能需先點主題分類:在 steps 加 { click: '選擇器' } 再 { waitMs }。"
+  },
+  {
+    "id": "cht-find-available",
+    "name": "中華電信 CHT 選號查詢",
+    "type": "browser",
+    "url": "https://bms.cht.com.tw/mbms/NewApply/findAvailable.jsp",
+    "delayMs": 1000,
+    "steps": [
+      { "waitMs": 3500 }
+    ],
+    "enabled": true,
+    "note": "此頁多半需先送出查詢才會列號碼。第一次跑若為空,請在 steps 補互動,例如 { click: '查詢按鈕選擇器' }, { waitFor: '結果容器選擇器' }。把實際頁面看到的按鈕/欄位告訴我,我幫你補。"
+  },
+  {
     "id": "example-url",
-    "name": "示範 URL 來源",
+    "name": "示範:靜態 URL 來源(fetch)",
     "type": "url",
     "url": "https://example.com/numbers",
     "selector": ".number-item",
     "delayMs": 2000,
     "enabled": false,
-    "note": "實際電信選號 URL 請自行填入並設 enabled: true"
+    "note": "靜態 HTML 用 url 型別即可;JS 動態頁請用 browser 型別。"
   }
 ]

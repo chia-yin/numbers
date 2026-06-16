@@ -257,7 +257,7 @@
 
     function getCandidatesForRank() {
       const source = getSelectedSource()
-      if (source && source.type === 'url') {
+      if (source && (source.type === 'url' || source.type === 'browser')) {
         return crawledCandidates
       }
       return manualInput.value
@@ -298,24 +298,29 @@
 
     crawlBtn.addEventListener('click', async () => {
       hideError()
-      const selected = sourceSelect.selectedOptions[0]
-      const url = selected.dataset.url
-      const selector = selected.dataset.selector
-      if (!url || !selector) {
-        showError('此來源缺少 URL 或 selector 設定')
+      const source = getSelectedSource()
+      if (!source || (source.type !== 'url' && source.type !== 'browser')) {
+        showError('此來源不支援自動抓取')
+        return
+      }
+      if (!source.url) {
+        showError('此來源缺少 URL 設定')
         return
       }
 
+      const payload =
+        source.type === 'browser'
+          ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs }
+          : { type: 'url', url: source.url, selector: source.selector }
+
       crawlBtn.disabled = true
-      crawlPreview.textContent = '抓取中…'
+      crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（首次較慢）' : '抓取中…'
 
       try {
         const response = await fetch('/api/crawl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            source: { type: 'url', url, selector },
-          }),
+          body: JSON.stringify({ source: payload }),
         })
         const data = await response.json()
         if (!response.ok) {

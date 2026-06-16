@@ -1,4 +1,5 @@
 import { extractFromHtml, extractFromText } from './parser.js';
+import { fetchViaBrowser } from './browser.js';
 import { checkRobots, sleep } from './politeness.js';
 
 const USER_AGENT = 'gonghao-numbers-crawler/1.0 (educational; contact: see package.json)';
@@ -20,6 +21,12 @@ export async function fetchCandidates(source) {
     }
     const html = await response.text();
     return extractFromHtml(html, source.selector ?? '');
+  }
+
+  if (source.type === 'browser') {
+    // JS 動態網站(如電信選號頁):用無頭瀏覽器渲染後抓號
+    await sleep(source.delayMs ?? 1000);
+    return fetchViaBrowser(source);
   }
 
   throw new Error('unknown source type');

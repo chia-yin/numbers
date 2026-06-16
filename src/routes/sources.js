@@ -22,6 +22,8 @@ function toPublicSource(source) {
     url: source.url,
     selector: source.selector,
     delayMs: source.delayMs,
+    steps: source.steps,
+    note: source.note,
   };
 }
 
@@ -30,7 +32,11 @@ router.get('/', (req, res) => {
   const allSources = JSON.parse(raw);
 
   const sources = allSources
-    .filter((source) => source.type === 'text' || (source.type === 'url' && source.enabled === true))
+    .filter(
+      (source) =>
+        source.type === 'text' ||
+        ((source.type === 'url' || source.type === 'browser') && source.enabled === true),
+    )
     .map(toPublicSource);
 
   res.status(200).json({ sources });

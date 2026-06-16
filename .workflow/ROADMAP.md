@@ -211,7 +211,7 @@
 
   **驗收：** `npm test` 全綠；手動測試貼入 5 個號碼，排名頁正確顯示並排序。
 
-- [ ] M8: Docker 化與完整文件——Dockerfile、docker-compose、README、環境變數清單
+- [x] M8: Docker 化與完整文件——Dockerfile、docker-compose、README、環境變數清單
 
   **交付物：**
   - `Dockerfile`：multi-stage build（builder 安裝依賴、runner 只複製 node_modules + src + public），node:20-alpine

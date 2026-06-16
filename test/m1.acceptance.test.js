@@ -65,7 +65,7 @@ test('container and environment files match M1 expectations', async () => {
 
   assert.match(dockerfile, /FROM\s+node:20-alpine\b/)
   assert.match(dockerfile, /WORKDIR\s+\/app/)
-  assert.match(dockerfile, /RUN\s+npm\s+install\s+--omit=dev/)
+  assert.match(dockerfile, /RUN\s+npm\s+ci\s+--omit=dev/)
   assert.match(dockerfile, /EXPOSE\s+3000/)
   assert.match(dockerfile, /CMD\s+\["node",\s*"src\/server\.js"\]/)
 

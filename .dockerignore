@@ -1,0 +1,7 @@
+node_modules
+.env
+test/
+reference/
+.workflow/
+*.md
+.git

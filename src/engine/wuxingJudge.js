@@ -3,7 +3,7 @@ import { analyze } from './calculator.js';
 import { DEFAULT_GROUP_CONFIG } from './groupConfig.js';
 
 const require = createRequire(import.meta.url);
-const numerologyData = require('../../reference/81數理.json');
+const numerologyData = require('../../config/81數理.json');
 
 const GENERATES = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
 const RESTRICTS = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };

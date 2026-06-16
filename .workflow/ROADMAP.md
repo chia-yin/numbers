@@ -140,7 +140,7 @@
 
   **驗收：** `npm test` 全綠；瀏覽器手動測試 0936102682 → 顯示正確五格。
 
-- [ ] M5: 整合 LLM adapter——AI 生成口語化整體解讀，提示詞放 prompts/ 可編輯
+- [x] M5: 整合 LLM adapter——AI 生成口語化整體解讀，提示詞放 prompts/ 可編輯
 
   **交付物：**
   - `src/llm/adapter.js`：匯出 `generateComment(analysisResult, options?)` → `Promise<string>`

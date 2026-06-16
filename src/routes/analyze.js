@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { judgeAll } from '../engine/wuxingJudge.js';
 import { DEFAULT_GROUP_CONFIG } from '../engine/groupConfig.js';
+import { generateComment } from '../llm/adapter.js';
 
 const WEIGHTS = {
   總格: 0.50,
@@ -100,6 +101,11 @@ export function analyzeHandler(phone, groups) {
 const router = Router();
 router.post('/', async (req, res) => {
   const { status, body } = analyzeHandler(req.body?.phone, req.body?.groups);
+
+  if (status === 200 && req.query.aiComment === 'true') {
+    body.aiComment = await generateComment(body);
+  }
+
   res.status(status).json(body);
 });
 

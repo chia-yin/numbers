@@ -19,6 +19,9 @@
       <input id="groups" type="text" value="3-3-4" pattern="^\d+(-\d+)+$" required>
     </label>
     <p class="hint">台灣手機 10 碼，預設切法：09xx-xxx-xxxx（即 3-3-4）</p>
+    <label>
+      <input type="checkbox" id="aiCommentToggle"> AI 口語解讀（需設定 LLM）
+    </label>
     <button type="submit">分析</button>
   </form>
 
@@ -52,6 +55,10 @@
       </thead>
       <tbody></tbody>
     </table>
+    <section id="aiCommentSection" style="display:none">
+      <h3>AI 口語解讀</h3>
+      <p id="aiCommentText"></p>
+    </section>
   </div>
 
   <script>
@@ -72,6 +79,9 @@
     const verdictEl = document.getElementById('verdict')
     const fiveGridBody = document.querySelector('#fiveGridTable tbody')
     const extendedBody = document.querySelector('#extendedTable tbody')
+    const aiCommentToggle = document.getElementById('aiCommentToggle')
+    const aiCommentSection = document.getElementById('aiCommentSection')
+    const aiCommentText = document.getElementById('aiCommentText')
 
     function symbolClass(symbol) {
       return SYMBOL_CLASS[symbol] || ''
@@ -135,12 +145,23 @@
       }
     }
 
+    function renderAiComment(aiComment) {
+      if (aiComment) {
+        aiCommentSection.style.display = ''
+        aiCommentText.textContent = aiComment
+      } else {
+        aiCommentSection.style.display = 'none'
+        aiCommentText.textContent = ''
+      }
+    }
+
     function renderResult(data) {
       hideError()
       resultEl.hidden = false
       renderVerdict(data)
       renderFiveGrid(data.fiveGrid)
       renderExtended(data.extended)
+      renderAiComment(data.aiComment)
     }
 
     form.addEventListener('submit', async (event) => {
@@ -150,9 +171,17 @@
       const groups = groupsInput.value
         .split('-')
         .map((part) => Number(part.trim()))
+      const wantAiComment = aiCommentToggle.checked
+
+      if (wantAiComment) {
+        aiCommentSection.style.display = ''
+        aiCommentText.textContent = 'AI 解讀生成中…'
+      } else {
+        renderAiComment(null)
+      }
 
       try {
-        const response = await fetch('/api/analyze', {
+        const response = await fetch('/api/analyze' + (wantAiComment ? '?aiComment=true' : ''), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone, groups }),

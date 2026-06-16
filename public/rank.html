@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>公號數字學 — 好號碼篩選排名</title>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.75rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    section {
+      margin-bottom: 1.5rem;
+    }
+
+    section h2 {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      max-width: 400px;
+    }
+
+    textarea#manualInput {
+      width: 100%;
+      font-family: monospace;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    input#minScore {
+      width: 5rem;
+    }
+
+    input#groups {
+      width: 8rem;
+    }
+
+    #crawlBtn,
+    #rankBtn {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      cursor: pointer;
+    }
+
+    #rankBtn {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    #stats {
+      margin: 0.75rem 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    #rankTable a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    #progress {
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html">← 單號分析</a>
+    <h1>好號碼篩選排名</h1>
+  </header>
+
+  <section id="sourceSection">
+    <h2>來源設定</h2>
+
+    <label>
+      號碼來源
+      <select id="sourceSelect">
+        <option value="">載入中…</option>
+      </select>
+    </label>
+
+    <label id="manualLabel">
+      貼入號碼（一行一個）
+      <textarea
+        id="manualInput"
+        rows="8"
+        placeholder="0912345678&#10;0987654321&#10;0936102682"
+      ></textarea>
+    </label>
+
+    <div id="crawlControls" hidden>
+      <button type="button" id="crawlBtn">抓取號碼</button>
+      <div id="crawlPreview" class="hint"></div>
+    </div>
+  </section>
+
+  <section id="filterSection">
+    <h2>篩選設定</h2>
+
+    <label>
+      最低評分閾值（0–100）
+      <input id="minScore" type="number" min="0" max="100" value="70">
+    </label>
+
+    <label>
+      分組規則
+      <input id="groups" type="text" value="3-3-4" pattern="^\d+(-\d+)+$">
+    </label>
+    <p class="hint">台灣手機 10 碼，預設 3-3-4</p>
+
+    <button type="button" id="rankBtn">篩選並排名</button>
+  </section>
+
+  <div id="progress" hidden class="hint"></div>
+
+  <div id="error" hidden></div>
+
+  <div id="stats" hidden></div>
+
+  <table id="rankTable" hidden>
+    <thead>
+      <tr>
+        <th>排名</th>
+        <th>電話號碼</th>
+        <th>加權分</th>
+        <th>評語</th>
+        <th>雙吉格</th>
+        <th>總格</th>
+        <th>外格</th>
+        <th>人格</th>
+        <th>地格</th>
+        <th>天格</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const SYMBOL_CLASS = {
+      '○': 'symbol-good',
+      '▲': 'symbol-mid',
+      'X': 'symbol-bad',
+    }
+
+    const sourceSelect = document.getElementById('sourceSelect')
+    const manualLabel = document.getElementById('manualLabel')
+    const manualInput = document.getElementById('manualInput')
+    const crawlControls = document.getElementById('crawlControls')
+    const crawlBtn = document.getElementById('crawlBtn')
+    const crawlPreview = document.getElementById('crawlPreview')
+    const minScoreInput = document.getElementById('minScore')
+    const groupsInput = document.getElementById('groups')
+    const rankBtn = document.getElementById('rankBtn')
+    const progressEl = document.getElementById('progress')
+    const statsEl = document.getElementById('stats')
+    const rankTable = document.getElementById('rankTable')
+    const rankTableBody = rankTable.querySelector('tbody')
+    const errorEl = document.getElementById('error')
+
+    let sources = []
+    let crawledCandidates = []
+
+    function symbolClass(symbol) {
+      return SYMBOL_CLASS[symbol] || ''
+    }
+
+    function showError(message) {
+      errorEl.hidden = false
+      errorEl.textContent = message
+    }
+
+    function hideError() {
+      errorEl.hidden = true
+      errorEl.textContent = ''
+    }
+
+    function getSelectedSource() {
+      const id = sourceSelect.value
+      return sources.find((s) => s.id === id)
+    }
+
+    function updateSourceMode() {
+      const source = getSelectedSource()
+      const isText = !source || source.type === 'text'
+      manualLabel.hidden = !isText
+      crawlControls.hidden = isText
+      if (!isText) {
+        crawledCandidates = []
+        crawlPreview.textContent = ''
+      }
+    }
+
+    function populateSourceSelect(data) {
+      sources = data.sources || []
+      sourceSelect.replaceChildren()
+      for (const source of sources) {
+        const option = document.createElement('option')
+        option.value = source.id
+        option.textContent = source.name
+        option.dataset.type = source.type
+        if (source.type === 'url') {
+          option.dataset.url = source.url
+          option.dataset.selector = source.selector
+        }
+        sourceSelect.appendChild(option)
+      }
+      const manualIndex = sources.findIndex((s) => s.id === 'manual')
+      if (manualIndex >= 0) {
+        sourceSelect.selectedIndex = manualIndex
+      }
+      updateSourceMode()
+    }
+
+    async function loadSources() {
+      try {
+        const response = await fetch('/api/sources')
+        const data = await response.json()
+        if (!response.ok) {
+          showError(data.error || '無法載入來源清單')
+          sourceSelect.replaceChildren()
+          const option = document.createElement('option')
+          option.value = ''
+          option.textContent = '載入失敗'
+          sourceSelect.appendChild(option)
+          return
+        }
+        populateSourceSelect(data)
+      } catch {
+        showError('無法連線至伺服器，請確認服務是否已啟動')
+        sourceSelect.replaceChildren()
+        const option = document.createElement('option')
+        option.value = ''
+        option.textContent = '載入失敗'
+        sourceSelect.appendChild(option)
+      }
+    }
+
+    function getCandidatesForRank() {
+      const source = getSelectedSource()
+      if (source && source.type === 'url') {
+        return crawledCandidates
+      }
+      return manualInput.value
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+    }
+
+    function renderRankTable(data, analyzedCount) {
+      rankTableBody.replaceChildren()
+      for (const item of data.ranked) {
+        const tr = document.createElement('tr')
+        tr.className = symbolClass(item.fiveGrid.總格.symbol)
+        const phone = item.phone ?? item.input
+        const premium = item.isPremium ? '★' : ''
+        tr.innerHTML = [
+          `<td>${item.rank}</td>`,
+          `<td><a href="index.html?phone=${encodeURIComponent(phone)}">${phone}</a></td>`,
+          `<td>${item.score.weighted.toFixed(1)}</td>`,
+          `<td>${item.score.level}</td>`,
+          `<td>${premium}</td>`,
+          `<td>${item.fiveGrid.總格.wuxing}</td>`,
+          `<td>${item.fiveGrid.外格.wuxing}</td>`,
+          `<td>${item.fiveGrid.人格.wuxing}</td>`,
+          `<td>${item.fiveGrid.地格.wuxing}</td>`,
+          `<td>${item.fiveGrid.天格.wuxing}</td>`,
+        ].join('')
+        rankTableBody.appendChild(tr)
+      }
+      statsEl.textContent = `共分析 ${analyzedCount} 筆，通過 ${data.total} 筆，過濾 ${data.filtered} 筆`
+      statsEl.hidden = false
+      rankTable.hidden = data.ranked.length === 0
+    }
+
+    sourceSelect.addEventListener('change', () => {
+      updateSourceMode()
+    })
+
+    crawlBtn.addEventListener('click', async () => {
+      hideError()
+      const selected = sourceSelect.selectedOptions[0]
+      const url = selected.dataset.url
+      const selector = selected.dataset.selector
+      if (!url || !selector) {
+        showError('此來源缺少 URL 或 selector 設定')
+        return
+      }
+
+      crawlBtn.disabled = true
+      crawlPreview.textContent = '抓取中…'
+
+      try {
+        const response = await fetch('/api/crawl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source: { type: 'url', url, selector },
+          }),
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          showError(data.error || '抓取失敗，請稍後再試')
+          crawlPreview.textContent = ''
+          return
+        }
+        crawledCandidates = data.candidates || []
+        const preview = crawledCandidates.slice(0, 5).join('、')
+        crawlPreview.textContent = `已抓取 ${crawledCandidates.length} 筆，前 5 筆：${preview || '（無）'}`
+      } catch {
+        showError('無法連線至伺服器，請確認服務是否已啟動')
+        crawlPreview.textContent = ''
+      } finally {
+        crawlBtn.disabled = false
+      }
+    })
+
+    rankBtn.addEventListener('click', async () => {
+      hideError()
+      const candidates = getCandidatesForRank()
+      if (candidates.length === 0) {
+        showError('請先輸入或抓取至少一筆號碼')
+        return
+      }
+
+      const groups = groupsInput.value
+        .split('-')
+        .map((part) => Number(part.trim()))
+      const minScore = parseFloat(minScoreInput.value)
+
+      progressEl.textContent = `分析中…（共 ${candidates.length} 筆）`
+      progressEl.hidden = false
+      rankBtn.disabled = true
+      statsEl.hidden = true
+      rankTable.hidden = true
+
+      try {
+        const response = await fetch('/api/rank', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ candidates, groups, minScore }),
+        })
+        const data = await response.json()
+        if (!response.ok) {
+          showError(data.error || '排名失敗，請稍後再試')
+          return
+        }
+        renderRankTable(data, candidates.length)
+      } catch {
+        showError('無法連線至伺服器，請確認服務是否已啟動')
+      } finally {
+        progressEl.hidden = true
+        rankBtn.disabled = false
+      }
+    })
+
+    document.addEventListener('DOMContentLoaded', loadSources)
+  </script>
+</body>
+</html>

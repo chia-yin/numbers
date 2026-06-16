@@ -25,6 +25,7 @@ function transformResult(result) {
       wuxing: grid.wuxing,
       symbol: numerology.symbol,
       luck: numerology.luck,
+      text: numerology.text,
       weight: WEIGHTS[key],
     };
     if (key !== '總格') {
@@ -103,7 +104,7 @@ router.post('/', async (req, res) => {
   const { status, body } = analyzeHandler(req.body?.phone, req.body?.groups);
 
   if (status === 200 && req.query.aiComment === 'true') {
-    body.aiComment = await generateComment(body);
+    body.aiComment = await generateComment(body, { profile: req.body?.profile });
   }
 
   res.status(status).json(body);

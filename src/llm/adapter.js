@@ -26,7 +26,7 @@ export async function generateComment(analysisResult, options = {}) {
   }
 
   try {
-    return await providerFn(analysisResult);
+    return await providerFn(analysisResult, options);
   } catch {
     return null;
   }

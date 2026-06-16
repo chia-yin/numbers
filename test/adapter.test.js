@@ -85,11 +85,18 @@ test('.env.example 包含 M5 LLM 環境變數', async () => {
   }
 });
 
-test('FE 提供 AI 解讀勾選、結果區塊，並依勾選狀態呼叫 query param', async () => {
+test('FE 提供 AI 進階個人化區塊與生辰欄位，並以 query param 呼叫', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
 
-  assert.match(html, /id="aiCommentToggle"/);
-  assert.match(html, /id="aiCommentSection"/);
-  assert.match(html, /id="aiCommentText"/);
+  assert.match(html, /id="aiSection"/);
+  assert.match(html, /id="aiBtn"/);
+  assert.match(html, /id="aiOutput"/);
+  // 個人資料欄位:姓名/性別/生日/時辰
+  assert.match(html, /id="pf-name"/);
+  assert.match(html, /id="pf-gender"/);
+  assert.match(html, /id="pf-date"/);
+  assert.match(html, /id="pf-time"/);
+  // 仍以 aiComment=true 觸發 AI,且帶上 profile
   assert.match(html, /\?aiComment=true/);
+  assert.match(html, /profile/);
 });

@@ -7,23 +7,28 @@ const css = await readFile(new URL('../public/style.css', import.meta.url), 'utf
 
 test('m4 ui: page exposes the required form and result containers', () => {
   assert.match(html, /<form[^>]+id="analyzeForm"/);
-  assert.match(html, /<input[^>]+id="phone"[^>]+type="text"[^>]+maxlength="15"[^>]+placeholder="0936102682"[^>]+required/);
-  assert.match(html, /<input[^>]+id="groups"[^>]+type="text"[^>]+value="3-3-4"[^>]+pattern="\^\\d\+\(-\\d\+\)\+\$"[^>]+required/);
+  assert.match(html, /<input[^>]+id="phone"/);
+  assert.match(html, /id="groups"/); // 進階自訂分組(可選)
   assert.match(html, /id="error"[^>]+hidden/);
   assert.match(html, /id="result"[^>]+hidden/);
   assert.match(html, /id="verdict"/);
   assert.match(html, /id="fiveGridTable"/);
   assert.match(html, /id="extendedTable"/);
+  assert.match(html, /id="detailList"/); // 各格詳解(81 數理斷語)
 });
 
-test('m4 ui: submit handler posts parsed groups to the analyze API', () => {
+test('m4 ui: 自動分組會去掉 10 碼開頭的 0 並切成 3-3-3', () => {
+  assert.match(html, /function normalize/);
+  assert.match(html, /startsWith\('0'\)/);
+  assert.match(html, /\[3,\s*3,\s*3\]/);
+});
+
+test('m4 ui: submit handler posts to the analyze API', () => {
   assert.match(html, /addEventListener\('submit'/);
   assert.match(html, /preventDefault\(\)/);
   assert.match(html, /fetch\('\/api\/analyze'/);
   assert.match(html, /method:\s*'POST'/);
   assert.match(html, /'Content-Type':\s*'application\/json'/);
-  assert.match(html, /split\('-'\)/);
-  assert.match(html, /Number\(part\.trim\(\)\)/);
   assert.match(html, /JSON\.stringify\(\{\s*phone,\s*groups\s*\}\)/);
 });
 
@@ -38,13 +43,17 @@ test('m4 ui: result rendering includes specified tables, relation fallback, prem
   assert.match(html, /errorEl\.hidden = false/);
 });
 
-test('m4 ui: stylesheet defines required layout and luck color classes', () => {
-  assert.match(css, /body\s*\{[\s\S]*font-family:\s*sans-serif;[\s\S]*max-width:\s*900px;[\s\S]*margin:\s*2rem auto;[\s\S]*padding:\s*0 1rem;/);
-  assert.match(css, /form\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*gap:\s*0\.75rem;[\s\S]*max-width:\s*400px;/);
-  assert.match(css, /table\s*\{[\s\S]*border-collapse:\s*collapse;[\s\S]*width:\s*100%;[\s\S]*margin-top:\s*1\.5rem;/);
-  assert.match(css, /#verdict\s*\{[\s\S]*padding:\s*1rem;[\s\S]*border-radius:\s*6px;[\s\S]*margin-top:\s*1\.5rem;[\s\S]*font-size:\s*1\.2rem;/);
-  assert.match(css, /#error\s*\{[\s\S]*color:\s*#721c24;[\s\S]*background:\s*#f8d7da;[\s\S]*padding:\s*0\.75rem;[\s\S]*border-radius:\s*4px;[\s\S]*margin-top:\s*1rem;/);
-  assert.match(css, /\.symbol-good\s*\{[\s\S]*background-color:\s*#d4edda;[\s\S]*color:\s*#155724;/);
-  assert.match(css, /\.symbol-mid\s*\{[\s\S]*background-color:\s*#fff3cd;[\s\S]*color:\s*#856404;/);
-  assert.match(css, /\.symbol-bad\s*\{[\s\S]*background-color:\s*#f8d7da;[\s\S]*color:\s*#721c24;/);
+test('m4 ui: stylesheet defines layout, luck color classes and detail/ai styles', () => {
+  // 不鎖死精確色碼/尺寸(已重新設計),只確認關鍵 class 仍存在且有定義
+  assert.match(css, /body\s*\{[\s\S]*font-family:/);
+  assert.match(css, /form\s*\{[\s\S]*flex-direction:\s*column;/);
+  assert.match(css, /table\s*\{[\s\S]*width:\s*100%;/);
+  assert.match(css, /#verdict\s*\{/);
+  assert.match(css, /#error\s*\{[\s\S]*background:/);
+  assert.match(css, /\.symbol-good\s*\{[\s\S]*background-color:/);
+  assert.match(css, /\.symbol-mid\s*\{[\s\S]*background-color:/);
+  assert.match(css, /\.symbol-bad\s*\{[\s\S]*background-color:/);
+  // 新版元件
+  assert.match(css, /\.detail-item\s*\{/);
+  assert.match(css, /\.ai-card\s*\{/);
 });

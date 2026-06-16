@@ -163,9 +163,81 @@ tr:last-child td { border-bottom: none; }
 #verdict.symbol-bad .level  { color: #8a1c28; }
 #verdict.symbol-mid .level  { color: #8a6100; }
 
+/* 進階摺疊 */
+.advanced { margin: 0.25rem 0; }
+.advanced summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 0.9rem;
+  padding: 0.3rem 0;
+}
+details.advanced[open] { padding-bottom: 0.5rem; }
+
+/* 套用資訊 */
+.applied {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+/* 各格詳解卡片 */
+#detailSection { margin-top: 1.75rem; }
+#detailList { display: flex; flex-direction: column; gap: 0.6rem; }
+.detail-item {
+  border-radius: var(--radius);
+  padding: 0.85rem 1.1rem;
+  box-shadow: var(--shadow);
+}
+.detail-head { font-weight: 600; margin-bottom: 0.35rem; }
+.detail-text { font-size: 0.92rem; line-height: 1.75; opacity: 0.92; }
+
+/* AI 進階卡片 */
+.ai-card {
+  margin-top: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+.profile-grid label { display: flex; flex-direction: column; font-size: 0.88rem; gap: 0.3rem; font-weight: 500; }
+.profile-grid input, .profile-grid select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.ai-output {
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+  line-height: 1.85;
+}
+.ai-output h2, .ai-output h3 { color: var(--primary-dark); margin: 1rem 0 0.4rem; }
+.ai-output h3 { font-size: 1.02rem; }
+.ai-output p { margin: 0.5rem 0; }
+.ai-output .li { margin: 0.3rem 0 0.3rem 0.5rem; }
+.ai-output .loading { color: var(--muted); }
+.ai-error { color: #8a1c28; background: #fad9dd; padding: 0.7rem 0.9rem; border-radius: 8px; margin-top: 0.8rem; font-size: 0.9rem; }
+
+/* 結果淡入 */
+.fade-in { animation: fadeInUp 0.4s ease both; }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
 @media (max-width: 600px) {
   body { padding: 1.25rem 0.9rem 3rem; }
   h1 { font-size: 1.3rem; }
   form { max-width: 100%; }
   th, td { padding: 0.55rem 0.4rem; font-size: 0.85rem; }
+  .profile-grid { grid-template-columns: 1fr; }
 }

@@ -60,13 +60,14 @@ test('runtime: serves the public index page with required content', async () => 
   assert.equal(response.status, 200)
   assert.equal(response.fellThrough, false)
   assert.match(response.body, /Content-Type: text\/html/)
-  assert.match(response.body, /Hello gonghao-numbers/)
-  assert.match(response.body, /電話號碼五格數字學工具/)
+  assert.match(response.body, /公號數字學 — 手機號碼五格分析/)
+  assert.match(response.body, /id="analyzeForm"/)
+  assert.match(response.body, /fetch\('\/api\/analyze'/)
 })
 
 test('runtime: unknown static paths are not served as the index page', async () => {
   const response = await requestApp('/missing-page.html')
 
   assert.equal(response.fellThrough, true)
-  assert.doesNotMatch(response.body, /Hello gonghao-numbers/)
+  assert.doesNotMatch(response.body, /id="analyzeForm"/)
 })

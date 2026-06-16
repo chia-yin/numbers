@@ -40,15 +40,19 @@ test('server module uses Express static public directory and exports app', async
   assert.match(serverJs, /export\s*\{\s*app\s*\}/)
 })
 
-test('index page contains required metadata and visible hello content', async () => {
+test('index page contains required metadata and M4 SPA content', async () => {
   const indexHtml = await readText('public/index.html')
 
   assert.match(indexHtml, /<html\s+lang=["']zh-TW["']/)
   assert.match(indexHtml, /<meta\s+charset=["']UTF-8["']\s*\/?>/)
   assert.match(indexHtml, /<meta\s+name=["']viewport["'][^>]*>/)
-  assert.match(indexHtml, /<title>\s*公號數字學\s*<\/title>/)
-  assert.match(indexHtml, /Hello gonghao-numbers/)
-  assert.match(indexHtml, /電話號碼五格數字學工具/)
+  assert.match(indexHtml, /<title>\s*公號數字學 — 手機號碼五格分析\s*<\/title>/)
+  assert.match(indexHtml, /id=["']analyzeForm["']/)
+  assert.match(indexHtml, /id=["']phone["']/)
+  assert.match(indexHtml, /id=["']groups["']/)
+  assert.match(indexHtml, /fetch\(['"]\/api\/analyze['"]/)
+  assert.match(indexHtml, /id=["']fiveGridTable["']/)
+  assert.match(indexHtml, /style\.css/)
 })
 
 test('container and environment files match M1 expectations', async () => {

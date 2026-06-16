@@ -1,0 +1,18 @@
+[
+  {
+    "id": "manual",
+    "name": "手動貼入號碼清單",
+    "type": "text",
+    "description": "將號碼（一行一個）貼入前端文字框"
+  },
+  {
+    "id": "example-url",
+    "name": "示範 URL 來源",
+    "type": "url",
+    "url": "https://example.com/numbers",
+    "selector": ".number-item",
+    "delayMs": 2000,
+    "enabled": false,
+    "note": "實際電信選號 URL 請自行填入並設 enabled: true"
+  }
+]

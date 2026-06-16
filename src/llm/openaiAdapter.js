@@ -19,6 +19,7 @@ export async function generateComment(analysisResult) {
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
+    signal: AbortSignal.timeout(15000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,

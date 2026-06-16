@@ -158,7 +158,7 @@
 
   **驗收：** `npm test` 全綠；設定 `.env` 後可從 UI 勾選「AI 解讀」取得評語。
 
-- [ ] M6: 選號爬蟲——可設定來源清單、禮貌爬蟲、支援貼入號碼清單模式
+- [x] M6: 選號爬蟲——可設定來源清單、禮貌爬蟲、支援貼入號碼清單模式
 
   **交付物：**
   - `src/crawler/index.js`：匯出 `fetchCandidates(source)` → `Promise<string[]>`（號碼陣列）

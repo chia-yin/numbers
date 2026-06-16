@@ -104,3 +104,39 @@ test('m5: openaiAdapter throws on non-2xx provider response', async () => {
 
   await assert.rejects(() => generateComment(sampleAnalysis()), /400/);
 });
+
+test('m5: openaiAdapter passes AbortSignal.timeout to fetch', async () => {
+  process.env.OPENAI_API_KEY = 'test-key';
+  process.env.OPENAI_BASE_URL = 'https://llm.example/v1';
+
+  globalThis.fetch = async (_url, options) => {
+    assert.ok(options.signal instanceof AbortSignal);
+    return new Response(
+      JSON.stringify({
+        choices: [{ message: { content: 'timeout signal ok' } }],
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+  };
+
+  const { generateComment } = await import('../src/llm/openaiAdapter.js');
+  const result = await generateComment(sampleAnalysis());
+
+  assert.equal(result, 'timeout signal ok');
+});
+
+test('m5: adapter returns null when openai fetch times out', async () => {
+  process.env.LLM_PROVIDER = 'openai';
+  process.env.OPENAI_API_KEY = 'test-key';
+
+  globalThis.fetch = async () => {
+    const error = new Error('The operation was aborted');
+    error.name = 'AbortError';
+    throw error;
+  };
+
+  const { generateComment } = await import('../src/llm/adapter.js');
+  const result = await generateComment(sampleAnalysis());
+
+  assert.equal(result, null);
+});

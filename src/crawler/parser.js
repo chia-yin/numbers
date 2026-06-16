@@ -1,11 +1,22 @@
 import { parse } from 'node-html-parser';
 
 function firstPhoneOnLine(line) {
-  // 移除「數字之間」的分隔符(空白、連字號、點),保留其他文字邊界,
-  // 例如 "0936 102 682"、"0936-102 682" 都正規化成 "0936102682"
-  const normalized = line.replace(/(\d)[\s.\-]+(?=\d)/g, '$1');
-  const match = normalized.match(/(?<!\d)(\d{10})(?!\d)/);
-  return match ? match[1] : null;
+  const noHyphen = line.replace(/-/g, '');
+  const simple = noHyphen.match(/\b(\d{10})\b/);
+  if (simple) {
+    return simple[1];
+  }
+
+  const spacedPattern = /(?:\d[\s.\-]*){10,}/g;
+  let match;
+  while ((match = spacedPattern.exec(line)) !== null) {
+    const digits = match[0].replace(/[\s.\-]/g, '');
+    if (digits.length === 10) {
+      return digits;
+    }
+  }
+
+  return null;
 }
 
 export function extractFromText(content) {

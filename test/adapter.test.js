@@ -17,9 +17,9 @@ afterEach(async () => {
   }
 });
 
-test('LLM_PROVIDER 未設定時，generateComment 回傳 null', async () => {
+test('LLM_PROVIDER 為不支援的值時，generateComment 回傳 null', async () => {
   const originalProvider = process.env.LLM_PROVIDER;
-  delete process.env.LLM_PROVIDER;
+  process.env.LLM_PROVIDER = 'none'; // 非 openai/cli 的值 = 明確關閉 AI
 
   try {
     const adapter = await importAdapter();

@@ -5,10 +5,16 @@ export function _setProviderForTest(fn) {
 }
 
 async function resolveProvider() {
-  const provider = process.env.LLM_PROVIDER;
+  // 預設用本機 claude CLI(免 API key,需先 claude login);
+  // 設 LLM_PROVIDER=openai 則改用 OpenAI(需 OPENAI_API_KEY)。
+  const provider = process.env.LLM_PROVIDER ?? 'cli';
   if (provider === 'openai') {
     const openaiAdapter = await import('./openaiAdapter.js');
     return openaiAdapter.generateComment;
+  }
+  if (provider === 'cli' || provider === 'claude') {
+    const cliAdapter = await import('./claudeCliAdapter.js');
+    return cliAdapter.generateComment;
   }
   return null;
 }

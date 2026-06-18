@@ -23,7 +23,6 @@ function toPublicSource(source) {
     selector: source.selector,
     delayMs: source.delayMs,
     steps: source.steps,
-    note: source.note,
   };
 }
 

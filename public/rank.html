@@ -3,214 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>公號數字學 — 好號碼篩選排名</title>
+  <title>公號數字學 — 批次選號・好號碼篩選</title>
   <link rel="stylesheet" href="./style.css">
   <style>
-    header {
-      display: flex;
-      align-items: baseline;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 0.75rem;
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
     }
-
-    header h1 {
-      margin: 0;
-      font-size: 1.4rem;
+    .source-card h2 { font-size: 1rem; color: var(--primary-dark); margin: 0 0 0.75rem; }
+    #manualInput { width: 100%; font-family: monospace; font-size: 0.9rem; resize: vertical; padding: 0.6rem 0.7rem; border: 1px solid var(--border); border-radius: 8px; }
+    select, #minGood { padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; }
+    .gridcells { display: inline-flex; gap: 4px; }
+    .gridcells span {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
     }
-
-    section {
-      margin-bottom: 1.5rem;
+    .good-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-weight: 700; color: var(--primary-dark);
     }
-
-    section h2 {
-      font-size: 1rem;
-      font-weight: bold;
-      color: #555;
-      margin-bottom: 0.5rem;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      margin-bottom: 0.5rem;
-      max-width: 400px;
-    }
-
-    textarea#manualInput {
-      width: 100%;
-      font-family: monospace;
-      font-size: 0.9rem;
-      resize: vertical;
-    }
-
-    input#minScore {
-      width: 5rem;
-    }
-
-    input#groups {
-      width: 8rem;
-    }
-
-    #crawlBtn,
-    #rankBtn {
-      margin-top: 0.5rem;
-      padding: 0.5rem 1.25rem;
-      cursor: pointer;
-    }
-
-    #rankBtn {
-      font-size: 1rem;
-      font-weight: bold;
-    }
-
-    #stats {
-      margin: 0.75rem 0;
-      font-size: 0.9rem;
-      color: #555;
-    }
-
-    #rankTable a {
-      color: inherit;
-      text-decoration: underline;
-    }
-
-    #progress {
-      margin: 0.5rem 0;
-    }
+    .good-badge .n { font-size: 1.2rem; }
+    #rankTable a { color: var(--primary-dark); text-decoration: none; font-weight: 600; }
+    #rankTable a:hover { text-decoration: underline; }
+    #stats { margin: 1rem 0 0.5rem; color: var(--muted); font-size: 0.92rem; }
+    .legend { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; }
   </style>
 </head>
 <body>
+  <h1>公號數字學 — 批次選號</h1>
+  <nav class="topnav">
+    <a href="index.html">單號分析</a>
+    <a href="rank.html" class="active">批次選號・好號碼篩選</a>
+  </nav>
 
-  <header>
-    <a href="index.html">← 單號分析</a>
-    <h1>好號碼篩選排名</h1>
-  </header>
-
-  <section id="sourceSection">
-    <h2>來源設定</h2>
-
+  <div class="source-card">
+    <h2>① 號碼來源</h2>
     <label>
-      號碼來源
-      <select id="sourceSelect">
-        <option value="">載入中…</option>
+      選擇來源
+      <select id="sourceSelect" style="width:100%;margin-top:0.3rem"><option value="">載入中…</option></select>
+    </label>
+    <label id="manualLabel" style="display:block;margin-top:0.75rem">
+      貼入號碼（一行一個）
+      <textarea id="manualInput" rows="7" placeholder="0912345678&#10;0987654321&#10;0936102682" style="margin-top:0.3rem"></textarea>
+    </label>
+    <div id="crawlControls" hidden style="margin-top:0.75rem">
+      <button type="button" id="crawlBtn" class="btn">抓取號碼</button>
+      <div id="crawlPreview" class="hint" style="margin-top:0.5rem"></div>
+    </div>
+  </div>
+
+  <div class="source-card">
+    <h2>② 篩選設定</h2>
+    <label>
+      只看「至少幾個吉（○）」的號碼
+      <select id="minGood" style="margin-top:0.3rem">
+        <option value="0">全部列出</option>
+        <option value="1">≥ 1 個吉</option>
+        <option value="2">≥ 2 個吉</option>
+        <option value="3">≥ 3 個吉</option>
+        <option value="4">≥ 4 個吉</option>
+        <option value="5">5 個全吉</option>
       </select>
     </label>
-
-    <label id="manualLabel">
-      貼入號碼（一行一個）
-      <textarea
-        id="manualInput"
-        rows="8"
-        placeholder="0912345678&#10;0987654321&#10;0936102682"
-      ></textarea>
-    </label>
-
-    <div id="crawlControls" hidden>
-      <button type="button" id="crawlBtn">抓取號碼</button>
-      <div id="crawlPreview" class="hint"></div>
-    </div>
-  </section>
-
-  <section id="filterSection">
-    <h2>篩選設定</h2>
-
-    <label>
-      最低評分閾值（0–100）
-      <input id="minScore" type="number" min="0" max="100" value="70">
-    </label>
-
-    <details class="advanced">
+    <details class="advanced" style="margin-top:0.6rem">
       <summary>進階：自訂分組規則</summary>
-      <label>
-        分組規則（留空＝自動）
-        <input id="groups" type="text" placeholder="自動" pattern="^(\d+(-\d+)+)?$">
+      <label>分組規則（留空＝自動）
+        <input id="groups" type="text" placeholder="自動" pattern="^(\d+(-\d+)+)?$" style="margin-top:0.3rem">
       </label>
     </details>
     <p class="hint">留空即可：10 碼會自動去掉開頭 0，依老師算法切成 3-3-3。</p>
-
-    <button type="button" id="rankBtn">篩選並排名</button>
-  </section>
+    <button type="button" id="rankBtn" class="btn" style="margin-top:0.5rem">分析並排名</button>
+  </div>
 
   <div id="progress" hidden class="hint"></div>
-
   <div id="error" hidden></div>
-
   <div id="stats" hidden></div>
 
   <table id="rankTable" hidden>
     <thead>
       <tr>
-        <th>排名</th>
-        <th>電話號碼</th>
-        <th>加權分</th>
-        <th>評語</th>
-        <th>雙吉格</th>
-        <th>總格</th>
-        <th>外格</th>
-        <th>人格</th>
-        <th>地格</th>
-        <th>天格</th>
+        <th>#</th>
+        <th>號碼</th>
+        <th>總格</th><th>天格</th><th>人格</th><th>地格</th><th>外格</th>
+        <th>吉（○）</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
+  <p id="legend" class="legend" hidden>○ 吉　▲ 半吉　X 凶　·　點號碼可看完整五格與斷語</p>
 
   <script>
-    const SYMBOL_CLASS = {
-      '○': 'symbol-good',
-      '▲': 'symbol-mid',
-      'X': 'symbol-bad',
-    }
-
-    const sourceSelect = document.getElementById('sourceSelect')
-    const manualLabel = document.getElementById('manualLabel')
-    const manualInput = document.getElementById('manualInput')
-    const crawlControls = document.getElementById('crawlControls')
-    const crawlBtn = document.getElementById('crawlBtn')
-    const crawlPreview = document.getElementById('crawlPreview')
-    const minScoreInput = document.getElementById('minScore')
-    const groupsInput = document.getElementById('groups')
-    const rankBtn = document.getElementById('rankBtn')
-    const progressEl = document.getElementById('progress')
-    const statsEl = document.getElementById('stats')
-    const rankTable = document.getElementById('rankTable')
+    const SYMBOL_CLASS = { '○': 'symbol-good', '▲': 'symbol-mid', 'X': 'symbol-bad' }
+    const GRID_ORDER = ['總格', '天格', '人格', '地格', '外格']
+    const $ = (id) => document.getElementById(id)
+    const sourceSelect = $('sourceSelect')
+    const manualLabel = $('manualLabel')
+    const manualInput = $('manualInput')
+    const crawlControls = $('crawlControls')
+    const crawlBtn = $('crawlBtn')
+    const crawlPreview = $('crawlPreview')
+    const minGoodInput = $('minGood')
+    const groupsInput = $('groups')
+    const rankBtn = $('rankBtn')
+    const progressEl = $('progress')
+    const statsEl = $('stats')
+    const rankTable = $('rankTable')
     const rankTableBody = rankTable.querySelector('tbody')
-    const errorEl = document.getElementById('error')
+    const legendEl = $('legend')
+    const errorEl = $('error')
 
     let sources = []
     let crawledCandidates = []
 
-    function symbolClass(symbol) {
-      return SYMBOL_CLASS[symbol] || ''
-    }
-
-    function showError(message) {
-      errorEl.hidden = false
-      errorEl.textContent = message
-    }
-
-    function hideError() {
-      errorEl.hidden = true
-      errorEl.textContent = ''
-    }
-
-    function getSelectedSource() {
-      const id = sourceSelect.value
-      return sources.find((s) => s.id === id)
-    }
+    const symbolClass = (s) => SYMBOL_CLASS[s] || ''
+    const showError = (m) => { errorEl.hidden = false; errorEl.textContent = m }
+    const hideError = () => { errorEl.hidden = true; errorEl.textContent = '' }
+    const getSelectedSource = () => sources.find((s) => s.id === sourceSelect.value)
 
     function updateSourceMode() {
       const source = getSelectedSource()
       const isText = !source || source.type === 'text'
       manualLabel.hidden = !isText
       crawlControls.hidden = isText
-      if (!isText) {
-        crawledCandidates = []
-        crawlPreview.textContent = ''
-      }
+      if (!isText) { crawledCandidates = []; crawlPreview.textContent = '' }
     }
 
     function populateSourceSelect(data) {
@@ -220,17 +139,10 @@
         const option = document.createElement('option')
         option.value = source.id
         option.textContent = source.name
-        option.dataset.type = source.type
-        if (source.type === 'url') {
-          option.dataset.url = source.url
-          option.dataset.selector = source.selector
-        }
         sourceSelect.appendChild(option)
       }
       const manualIndex = sources.findIndex((s) => s.id === 'manual')
-      if (manualIndex >= 0) {
-        sourceSelect.selectedIndex = manualIndex
-      }
+      if (manualIndex >= 0) sourceSelect.selectedIndex = manualIndex
       updateSourceMode()
     }
 
@@ -238,146 +150,97 @@
       try {
         const response = await fetch('/api/sources')
         const data = await response.json()
-        if (!response.ok) {
-          showError(data.error || '無法載入來源清單')
-          sourceSelect.replaceChildren()
-          const option = document.createElement('option')
-          option.value = ''
-          option.textContent = '載入失敗'
-          sourceSelect.appendChild(option)
-          return
-        }
+        if (!response.ok) { showError(data.error || '無法載入來源清單'); return }
         populateSourceSelect(data)
       } catch {
         showError('無法連線至伺服器，請確認服務是否已啟動')
-        sourceSelect.replaceChildren()
-        const option = document.createElement('option')
-        option.value = ''
-        option.textContent = '載入失敗'
-        sourceSelect.appendChild(option)
       }
     }
 
     function getCandidatesForRank() {
       const source = getSelectedSource()
-      if (source && (source.type === 'url' || source.type === 'browser')) {
-        return crawledCandidates
-      }
-      return manualInput.value
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
+      if (source && (source.type === 'url' || source.type === 'browser')) return crawledCandidates
+      return manualInput.value.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
+    }
+
+    function gridCellsHtml(fiveGrid) {
+      return '<div class="gridcells">' + GRID_ORDER.map((k) => {
+        const s = fiveGrid[k].symbol
+        return `<span class="${symbolClass(s)}" title="${k} ${fiveGrid[k].value}">${s}</span>`
+      }).join('') + '</div>'
     }
 
     function renderRankTable(data, analyzedCount) {
       rankTableBody.replaceChildren()
       for (const item of data.ranked) {
-        const tr = document.createElement('tr')
-        tr.className = symbolClass(item.fiveGrid.總格.symbol)
         const phone = item.phone ?? item.input
-        const premium = item.isPremium ? '★' : ''
+        const tr = document.createElement('tr')
         tr.innerHTML = [
           `<td>${item.rank}</td>`,
           `<td><a href="index.html?phone=${encodeURIComponent(phone)}">${phone}</a></td>`,
-          `<td>${item.score.weighted.toFixed(1)}</td>`,
-          `<td>${item.score.level}</td>`,
-          `<td>${premium}</td>`,
-          `<td>${item.fiveGrid.總格.wuxing}</td>`,
-          `<td>${item.fiveGrid.外格.wuxing}</td>`,
-          `<td>${item.fiveGrid.人格.wuxing}</td>`,
-          `<td>${item.fiveGrid.地格.wuxing}</td>`,
-          `<td>${item.fiveGrid.天格.wuxing}</td>`,
+          ...GRID_ORDER.map((k) => {
+            const g = item.fiveGrid[k]
+            return `<td class="${symbolClass(g.symbol)}">${g.symbol}</td>`
+          }),
+          `<td><span class="good-badge"><span class="n">${item.goodCount}</span>/5</span></td>`,
         ].join('')
         rankTableBody.appendChild(tr)
       }
-      statsEl.textContent = `共分析 ${analyzedCount} 筆，通過 ${data.total} 筆，過濾 ${data.filtered} 筆`
+      const empty = data.ranked.length === 0
+      statsEl.textContent = `共分析 ${analyzedCount} 筆　·　符合條件 ${data.total} 筆　·　未列出 ${data.filtered} 筆`
       statsEl.hidden = false
-      rankTable.hidden = data.ranked.length === 0
+      rankTable.hidden = empty
+      legendEl.hidden = empty
     }
 
-    sourceSelect.addEventListener('change', () => {
-      updateSourceMode()
-    })
+    sourceSelect.addEventListener('change', updateSourceMode)
 
     crawlBtn.addEventListener('click', async () => {
       hideError()
       const source = getSelectedSource()
-      if (!source || (source.type !== 'url' && source.type !== 'browser')) {
-        showError('此來源不支援自動抓取')
-        return
-      }
-      if (!source.url) {
-        showError('此來源缺少 URL 設定')
-        return
-      }
-
-      const payload =
-        source.type === 'browser'
-          ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs }
-          : { type: 'url', url: source.url, selector: source.selector }
-
+      if (!source || (source.type !== 'url' && source.type !== 'browser')) { showError('此來源不支援自動抓取'); return }
+      if (!source.url) { showError('此來源缺少 URL 設定'); return }
+      const payload = source.type === 'browser'
+        ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs }
+        : { type: 'url', url: source.url, selector: source.selector }
       crawlBtn.disabled = true
       crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（首次較慢）' : '抓取中…'
-
       try {
         const response = await fetch('/api/crawl', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ source: payload }),
         })
         const data = await response.json()
-        if (!response.ok) {
-          showError(data.error || '抓取失敗，請稍後再試')
-          crawlPreview.textContent = ''
-          return
-        }
+        if (!response.ok) { showError(data.error || '抓取失敗，請稍後再試'); crawlPreview.textContent = ''; return }
         crawledCandidates = data.candidates || []
         const preview = crawledCandidates.slice(0, 5).join('、')
         crawlPreview.textContent = `已抓取 ${crawledCandidates.length} 筆，前 5 筆：${preview || '（無）'}`
       } catch {
-        showError('無法連線至伺服器，請確認服務是否已啟動')
-        crawlPreview.textContent = ''
-      } finally {
-        crawlBtn.disabled = false
-      }
+        showError('無法連線至伺服器，請確認服務是否已啟動'); crawlPreview.textContent = ''
+      } finally { crawlBtn.disabled = false }
     })
 
     rankBtn.addEventListener('click', async () => {
       hideError()
       const candidates = getCandidatesForRank()
-      if (candidates.length === 0) {
-        showError('請先輸入或抓取至少一筆號碼')
-        return
-      }
-
+      if (candidates.length === 0) { showError('請先輸入或抓取至少一筆號碼'); return }
       const groupsRaw = groupsInput.value.trim()
-      const groups = groupsRaw ? groupsRaw.split('-').map((part) => Number(part.trim())) : undefined
-      const minScore = parseFloat(minScoreInput.value)
-
+      const groups = groupsRaw ? groupsRaw.split('-').map((p) => Number(p.trim())) : undefined
+      const minGood = Number(minGoodInput.value)
       progressEl.textContent = `分析中…（共 ${candidates.length} 筆）`
       progressEl.hidden = false
-      rankBtn.disabled = true
-      statsEl.hidden = true
-      rankTable.hidden = true
-
+      rankBtn.disabled = true; statsEl.hidden = true; rankTable.hidden = true; legendEl.hidden = true
       try {
         const response = await fetch('/api/rank', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ candidates, groups, minScore }),
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ candidates, groups, minGood }),
         })
         const data = await response.json()
-        if (!response.ok) {
-          showError(data.error || '排名失敗，請稍後再試')
-          return
-        }
+        if (!response.ok) { showError(data.error || '排名失敗，請稍後再試'); return }
         renderRankTable(data, candidates.length)
       } catch {
         showError('無法連線至伺服器，請確認服務是否已啟動')
-      } finally {
-        progressEl.hidden = true
-        rankBtn.disabled = false
-      }
+      } finally { progressEl.hidden = true; rankBtn.disabled = false }
     })
 
     document.addEventListener('DOMContentLoaded', loadSources)

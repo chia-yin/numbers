@@ -78,10 +78,9 @@ test('m7 acceptance: POST /api/rank rejects more than 200 candidates with HTTP 4
   assert.deepEqual(response.body, { error: 'candidates limit is 200' });
 });
 
-test('m7 acceptance: POST /api/rank sorts weighted scores and adds rank fields', async () => {
+test('m7 acceptance: POST /api/rank 依吉(○)數排序並加上 rank/goodCount', async () => {
   const response = await requestAppJson('POST', '/api/rank', {
     candidates: ['0936102682', '0912345678'],
-    minScore: 0,
   });
 
   assert.equal(response.status, 200);
@@ -92,18 +91,20 @@ test('m7 acceptance: POST /api/rank sorts weighted scores and adds rank fields',
   for (let index = 0; index < response.body.ranked.length; index++) {
     assert.equal(response.body.ranked[index].rank, index + 1);
     assert.equal(Object.hasOwn(response.body.ranked[index], 'aiComment'), false);
+    assert.equal(typeof response.body.ranked[index].goodCount, 'number');
   }
 
-  assert.ok(response.body.ranked[0].score.weighted >= response.body.ranked[1].score.weighted);
+  assert.ok(response.body.ranked[0].goodCount >= response.body.ranked[1].goodCount);
 });
 
-test('m7 acceptance: POST /api/rank minScore 99 filters a lower scoring candidate', async () => {
+test('m7 acceptance: POST /api/rank minGood 5 只留五格全吉', async () => {
   const response = await requestAppJson('POST', '/api/rank', {
     candidates: ['0936102682'],
-    minScore: 99,
+    minGood: 5,
   });
 
   assert.equal(response.status, 200);
+  // 0936102682 非五格全吉 → 被濾掉
   assert.deepEqual(response.body.ranked, []);
   assert.equal(response.body.total, 0);
   assert.equal(response.body.filtered, 1);
@@ -149,13 +150,11 @@ test('m7 ui: rank.html exposes required controls, result table, and API wiring',
   const root = parse(rankHtml);
 
   for (const selector of [
-    'section#sourceSection',
     'select#sourceSelect',
     'textarea#manualInput',
     'button#crawlBtn',
     'div#crawlPreview',
-    'section#filterSection',
-    'input#minScore',
+    'select#minGood',
     'input#groups',
     'button#rankBtn',
     'div#progress',
@@ -166,30 +165,29 @@ test('m7 ui: rank.html exposes required controls, result table, and API wiring',
     assert.ok(root.querySelector(selector), `missing ${selector}`);
   }
 
-  assert.equal(root.querySelector('input#minScore').getAttribute('type'), 'number');
-  assert.equal(root.querySelector('input#minScore').getAttribute('min'), '0');
-  assert.equal(root.querySelector('input#minScore').getAttribute('max'), '100');
-  assert.equal(root.querySelector('input#minScore').getAttribute('value'), '70');
-  assert.equal(root.querySelector('input#groups').getAttribute('value'), '3-3-4');
+  // 篩選改用「至少幾個吉(○)」下拉,含 0–5 選項
+  const minGoodValues = root.querySelectorAll('#minGood option').map((o) => o.getAttribute('value'));
+  for (const v of ['0', '1', '2', '3', '4', '5']) assert.ok(minGoodValues.includes(v), `missing minGood ${v}`);
 
-  for (const heading of ['排名', '電話號碼', '加權分', '評語', '雙吉格', '總格', '外格', '人格', '地格', '天格']) {
+  // 結果表頭:號碼 + 五格 + 吉(○)數,不再有加權分
+  for (const heading of ['號碼', '總格', '天格', '人格', '地格', '外格']) {
     assert.ok(root.querySelectorAll('th').some((node) => node.text.trim() === heading), `missing ${heading}`);
   }
+  assert.ok(root.querySelectorAll('th').some((node) => node.text.includes('吉')), 'missing 吉 column');
+  assert.ok(!root.querySelectorAll('th').some((node) => node.text.includes('加權分')), '不應再有加權分');
 
   assert.match(rankHtml, /fetch\('\/api\/sources'\)/);
   assert.match(rankHtml, /fetch\('\/api\/crawl'/);
   assert.match(rankHtml, /fetch\('\/api\/rank'/);
-  assert.match(rankHtml, /split\('\\n'\)/);
-  assert.match(rankHtml, /split\('-'\)/);
   assert.match(rankHtml, /index\.html\?phone=\$\{encodeURIComponent\(phone\)\}/);
-  assert.match(rankHtml, /item\.score\.weighted\.toFixed\(1\)/);
-  assert.match(rankHtml, /symbolClass\(item\.fiveGrid\.總格\.symbol\)/);
+  assert.match(rankHtml, /item\.goodCount/);
+  assert.match(rankHtml, /symbolClass/);
 });
 
 test('m7 ui: index.html reads ?phone query parameter and submits analysis automatically', () => {
   assert.match(indexHtml, /new URLSearchParams\(window\.location\.search\)/);
   assert.match(indexHtml, /\.get\('phone'\)/);
-  assert.match(indexHtml, /phoneInput\.value = _prePhone/);
+  assert.match(indexHtml, /phoneInput\.value = _pre/);
   assert.match(indexHtml, /form\.requestSubmit\(\)/);
 
   const submitHandlerIndex = indexHtml.indexOf("form.addEventListener('submit'");

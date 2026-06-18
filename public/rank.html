@@ -122,11 +122,14 @@
       <input id="minScore" type="number" min="0" max="100" value="70">
     </label>
 
-    <label>
-      分組規則
-      <input id="groups" type="text" value="3-3-4" pattern="^\d+(-\d+)+$">
-    </label>
-    <p class="hint">台灣手機 10 碼，預設 3-3-4</p>
+    <details class="advanced">
+      <summary>進階：自訂分組規則</summary>
+      <label>
+        分組規則（留空＝自動）
+        <input id="groups" type="text" placeholder="自動" pattern="^(\d+(-\d+)+)?$">
+      </label>
+    </details>
+    <p class="hint">留空即可：10 碼會自動去掉開頭 0，依老師算法切成 3-3-3。</p>
 
     <button type="button" id="rankBtn">篩選並排名</button>
   </section>
@@ -347,9 +350,8 @@
         return
       }
 
-      const groups = groupsInput.value
-        .split('-')
-        .map((part) => Number(part.trim()))
+      const groupsRaw = groupsInput.value.trim()
+      const groups = groupsRaw ? groupsRaw.split('-').map((part) => Number(part.trim())) : undefined
       const minScore = parseFloat(minScoreInput.value)
 
       progressEl.textContent = `分析中…（共 ${candidates.length} 筆）`

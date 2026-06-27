@@ -14,7 +14,7 @@
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.25rem;
     }
-    .source-card h2 { font-size: 1rem; color: var(--primary-dark); margin: 0 0 0.75rem; }
+    .source-card h2 { font-size: 1.25rem; font-weight: 600; color: var(--primary-dark); margin: 0 0 0.75rem; }
     #manualInput { width: 100%; font-family: monospace; font-size: 0.9rem; resize: vertical; padding: 0.6rem 0.7rem; border: 1px solid var(--border); border-radius: 8px; }
     select, #minGood { padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; }
     .gridcells { display: inline-flex; gap: 4px; }
@@ -82,6 +82,7 @@
   <div id="progress" hidden class="hint"></div>
   <div id="error" hidden></div>
   <div id="stats" hidden></div>
+  <button type="button" id="csvBtn" class="btn" hidden style="margin-bottom:0.75rem">匯出 CSV</button>
 
   <table id="rankTable" hidden>
     <thead>
@@ -114,10 +115,12 @@
     const rankTable = $('rankTable')
     const rankTableBody = rankTable.querySelector('tbody')
     const legendEl = $('legend')
+    const csvBtn = $('csvBtn')
     const errorEl = $('error')
 
     let sources = []
     let crawledCandidates = []
+    let lastRanked = []
 
     const symbolClass = (s) => SYMBOL_CLASS[s] || ''
     const showError = (m) => { errorEl.hidden = false; errorEl.textContent = m }
@@ -191,7 +194,27 @@
       statsEl.hidden = false
       rankTable.hidden = empty
       legendEl.hidden = empty
+      lastRanked = data.ranked
+      csvBtn.hidden = empty
     }
+
+    function downloadCsv() {
+      if (!lastRanked.length) return
+      const header = ['排名', '號碼', ...GRID_ORDER, '吉數']
+      const rows = lastRanked.map((item) => {
+        const phone = item.phone ?? item.input
+        const syms = GRID_ORDER.map((k) => `${item.fiveGrid[k].symbol}${item.fiveGrid[k].value}`)
+        return [item.rank, `="${phone}"`, ...syms, `${item.goodCount}/5`]
+      })
+      const csv = [header, ...rows].map((r) => r.join(',')).join('\r\n')
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `好號碼分析_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    }
+    csvBtn.addEventListener('click', downloadCsv)
 
     sourceSelect.addEventListener('change', updateSourceMode)
 
@@ -201,7 +224,7 @@
       if (!source || (source.type !== 'url' && source.type !== 'browser')) { showError('此來源不支援自動抓取'); return }
       if (!source.url) { showError('此來源缺少 URL 設定'); return }
       const payload = source.type === 'browser'
-        ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs }
+        ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs, iterateSelect: source.iterateSelect }
         : { type: 'url', url: source.url, selector: source.selector }
       crawlBtn.disabled = true
       crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（首次較慢）' : '抓取中…'

@@ -19,15 +19,17 @@
   },
   {
     "id": "cht-find-available",
-    "name": "中華電信 CHT 選號查詢",
+    "name": "中華電信 CHT 選號查詢（全前綴）",
     "type": "browser",
     "url": "https://bms.cht.com.tw/mbms/NewApply/findAvailable.jsp",
     "delayMs": 1000,
-    "steps": [
-      { "waitMs": 3500 }
-    ],
+    "iterateSelect": {
+      "optionPattern": "^09\\d\\d$",
+      "submitText": "確定查詢",
+      "waitMs": 2500
+    },
     "enabled": true,
-    "note": "此頁多半需先送出查詢才會列號碼。第一次跑若為空,請在 steps 補互動,例如 { click: '查詢按鈕選擇器' }, { waitFor: '結果容器選擇器' }。把實際頁面看到的按鈕/欄位告訴我,我幫你補。"
+    "note": "自動遍歷「前四碼」下拉(0900,0901,…)每個前綴送出查詢並抓號。會跑多輪、較久。若抓不到,把實際送出按鈕文字/下拉 name 告訴我微調。"
   },
   {
     "id": "example-url",

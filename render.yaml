@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: gonghao-numbers
+    name: jiesheng-numbers
     runtime: node
     plan: free
     buildCommand: npm install

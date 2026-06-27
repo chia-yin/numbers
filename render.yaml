@@ -12,3 +12,6 @@ services:
       # 不下載 Playwright 瀏覽器(CHT 爬蟲走純 fetch 不需要;FET 在免費主機不支援)
       - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
         value: '1'
+      # 無瀏覽器主機:隱藏 FET(需 Playwright);只留 CHT(純 fetch)
+      - key: NO_PLAYWRIGHT
+        value: '1'

@@ -78,8 +78,13 @@
         <label>出生時辰<input id="pf-time" type="time"></label>
       </div>
       <button type="button" id="aiBtn" class="btn">生成個人化命理解析</button>
+      <button type="button" id="promptBtn" class="btn" style="background:#fff;color:var(--primary,#2d6a4f);border:1px solid var(--primary,#2d6a4f)">產生提示詞（自己貼去 ChatGPT/Claude）</button>
       <div id="aiError" class="ai-error" hidden></div>
       <div id="aiOutput" class="ai-output" hidden></div>
+      <div id="promptWrap" hidden style="margin-top:1rem">
+        <textarea id="promptBox" rows="10" readonly style="width:100%;font-size:.85rem;font-family:monospace;padding:.6rem;border:1px solid #e3e8e3;border-radius:8px"></textarea>
+        <button type="button" id="promptCopy" class="btn">複製提示詞</button>
+      </div>
     </section>
   </div>
 
@@ -257,6 +262,28 @@
       } finally {
         aiBtn.disabled = false; aiBtn.textContent = orig
       }
+    })
+
+    // 產生提示詞(不呼叫 AI,複製去自己的 ChatGPT/Claude)
+    const promptBtn = $('promptBtn'), promptWrap = $('promptWrap'), promptBox = $('promptBox'), promptCopy = $('promptCopy')
+    promptBtn.addEventListener('click', async () => {
+      if (!lastPhone) { aiError.hidden = false; aiError.textContent = '請先在上方分析一支號碼'; return }
+      const profile = { name: $('pf-name').value.trim(), gender: $('pf-gender').value, birthDate: $('pf-date').value, birthTime: $('pf-time').value }
+      promptBtn.disabled = true
+      try {
+        const res = await fetch('/api/analyze?prompt=true', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: lastPhone, groups: lastGroups, profile }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.aiPrompt) { aiError.hidden = false; aiError.textContent = data.error || '產生失敗'; return }
+        promptWrap.hidden = false; promptBox.value = data.aiPrompt
+      } catch { aiError.hidden = false; aiError.textContent = '無法連線至伺服器' }
+      finally { promptBtn.disabled = false }
+    })
+    promptCopy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(promptBox.value); const o = promptCopy.textContent; promptCopy.textContent = '已複製！'; setTimeout(() => { promptCopy.textContent = o }, 2000) }
+      catch { promptBox.select() }
     })
 
     // AI 關閉時(部署/送人版)移除 AI 進階區

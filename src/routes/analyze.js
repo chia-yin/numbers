@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { judgeAll } from '../engine/wuxingJudge.js';
 import { DEFAULT_GROUP_CONFIG } from '../engine/groupConfig.js';
 import { generateComment } from '../llm/adapter.js';
+import { buildPrompt } from '../llm/promptBuilder.js';
 
 const WEIGHTS = {
   總格: 0.50,
@@ -102,6 +103,11 @@ export function analyzeHandler(phone, groups) {
 const router = Router();
 router.post('/', async (req, res) => {
   const { status, body } = analyzeHandler(req.body?.phone, req.body?.groups);
+
+  // 只產生提示詞(不呼叫 LLM):讓使用者複製去自己的 ChatGPT/Claude
+  if (status === 200 && req.query.prompt === 'true') {
+    body.aiPrompt = await buildPrompt(body, { profile: req.body?.profile });
+  }
 
   if (status === 200 && req.query.aiComment === 'true') {
     body.aiComment = await generateComment(body, { profile: req.body?.profile });

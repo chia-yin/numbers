@@ -23,7 +23,10 @@
     "type": "browser",
     "url": "https://bms.cht.com.tw/mbms/NewApply/findAvailable.jsp",
     "delayMs": 600,
-    "cht": true,
+    "cht": {
+      "prefixes": ["0900", "0905", "0912", "0919", "0928", "0933", "0965", "0966", "0975", "0978"],
+      "maxPages": 25
+    },
     "enabled": true,
     "note": "直接打 CHT findAvailableProc.jsp API:自動抓前四碼清單,逐前綴翻頁抓所有可選號碼(免瀏覽器)。"
   },

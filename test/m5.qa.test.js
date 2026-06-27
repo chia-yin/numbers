@@ -125,9 +125,9 @@ test('m5: aiComment=true with LLM_PROVIDER=openai returns generated comment from
   }
 });
 
-test('m5: aiComment=true without LLM_PROVIDER returns aiComment null with HTTP 200', async () => {
+test('m5: aiComment=true 當 LLM_PROVIDER=none 時 aiComment 為 null,HTTP 200', async () => {
   const restoreEnv = withEnv({
-    LLM_PROVIDER: undefined,
+    LLM_PROVIDER: 'none',
     OPENAI_API_KEY: undefined,
     OPENAI_BASE_URL: undefined,
     OPENAI_MODEL: undefined,

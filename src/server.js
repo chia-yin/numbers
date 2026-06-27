@@ -8,7 +8,7 @@ import { router as sourcesRouter } from './routes/sources.js'
 const app = express()
 const PORT = process.env.PORT ?? 3000
 
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
 app.use('/api/analyze', analyzeRouter)
 app.use('/api/crawl', crawlRouter)
 app.use('/api/rank', rankRouter)

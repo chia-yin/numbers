@@ -473,6 +473,7 @@ const N={
     "text": "最極之數，即返樸歸真、還元之數。故與數字1相同，榮華富貴、名利長壽，享天賜之福份。"
   }
 };
+const PRELOAD=[];
 const G=['總格','天格','人格','地格','外格'];
 const CLS={'○':'good','▲':'mid','X':'bad'};
 function wux(d){d=+d;if(d===1||d===2)return'木';if(d===3||d===4)return'火';if(d===5||d===6)return'土';if(d===7||d===8)return'金';return'水'}
@@ -516,6 +517,8 @@ function csv(){
   const blob=new Blob(['\ufeff'+[h.map(esc).join(','),...rows].join('\r\n')],{type:'text/csv;charset=utf-8'});
   const u=URL.createObjectURL(blob);const link=document.createElement('a');link.href=u;link.download='五格分析.csv';link.click();URL.revokeObjectURL(u);
 }
+// 若 build 時已烤入號碼,開檔自動載入並分析
+if(PRELOAD.length){tab(2);document.getElementById('batch').value=PRELOAD.join('\n');many()}
 </script>
 </body>
 </html>

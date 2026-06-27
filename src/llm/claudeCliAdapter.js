@@ -40,8 +40,10 @@ export async function generateComment(analysisResult, options = {}) {
   if (process.env.CLAUDE_MODEL) args.push('--model', process.env.CLAUDE_MODEL);
   args.push(content);
 
+  // 補常見 bin 路徑,避免從 Finder/GUI 啟動 server 時 PATH 找不到 claude
+  const PATH = `${process.env.PATH || ''}:/opt/homebrew/bin:/usr/local/bin:${process.env.HOME || ''}/.local/bin`;
   return await new Promise((resolve, reject) => {
-    const child = spawn('claude', args);
+    const child = spawn('claude', args, { env: { ...process.env, PATH } });
     let out = '';
     let err = '';
     const timer = setTimeout(() => {

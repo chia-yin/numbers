@@ -1,9 +1,26 @@
 #!/usr/bin/env node
 // 產生單檔、可離線直接開的網頁版(無 server / 無 AI),把 81 數理資料內嵌進去。
-// 用法:node scripts/build-standalone.js  → 產生 dist/公號數字學.html
+// 用法:
+//   node scripts/build-standalone.js            → 純分析版(對方自己貼號碼)
+//   node scripts/build-standalone.js cht         → 先爬中華電信,把號碼烤進 html(對方開檔即見好號)
+//   node scripts/build-standalone.js fet         → 先爬遠傳(需 Playwright)
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { fetchCandidates } from '../src/crawler/index.js';
 
 const numerology = readFileSync(new URL('../config/81數理.json', import.meta.url), 'utf8');
+
+// 可選:build 時先爬號碼,烤進 html
+const ALIAS = { cht: 'cht-find-available', fet: 'fetnet-theme' };
+let preload = [];
+const want = process.argv[2];
+if (want) {
+  const sources = JSON.parse(readFileSync(new URL('../config/sources.json', import.meta.url), 'utf8'));
+  const src = sources.find((s) => s.id === (ALIAS[want] || want));
+  if (!src) { console.error(`找不到來源「${want}」`); process.exit(1); }
+  console.error(`爬取「${src.name}」中…(把號碼烤進 html)`);
+  preload = await fetchCandidates(src);
+  console.error(`抓到 ${preload.length} 筆,嵌入 html`);
+}
 
 const html = `<!DOCTYPE html>
 <html lang="zh-TW">
@@ -74,6 +91,7 @@ tr:last-child td{border-bottom:none}
 
 <script>
 const N=${numerology};
+const PRELOAD=${JSON.stringify(preload)};
 const G=['總格','天格','人格','地格','外格'];
 const CLS={'○':'good','▲':'mid','X':'bad'};
 function wux(d){d=+d;if(d===1||d===2)return'木';if(d===3||d===4)return'火';if(d===5||d===6)return'土';if(d===7||d===8)return'金';return'水'}
@@ -117,6 +135,8 @@ function csv(){
   const blob=new Blob(['\\ufeff'+[h.map(esc).join(','),...rows].join('\\r\\n')],{type:'text/csv;charset=utf-8'});
   const u=URL.createObjectURL(blob);const link=document.createElement('a');link.href=u;link.download='五格分析.csv';link.click();URL.revokeObjectURL(u);
 }
+// 若 build 時已烤入號碼,開檔自動載入並分析
+if(PRELOAD.length){tab(2);document.getElementById('batch').value=PRELOAD.join('\\n');many()}
 </script>
 </body>
 </html>

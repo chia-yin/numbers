@@ -3,6 +3,7 @@ import { judgeAll } from '../engine/wuxingJudge.js';
 import { DEFAULT_GROUP_CONFIG } from '../engine/groupConfig.js';
 import { generateComment } from '../llm/adapter.js';
 import { buildPrompt, buildMultiPrompt } from '../llm/promptBuilder.js';
+import { autoGroup } from './rank.js';
 
 const WEIGHTS = {
   總格: 0.50,
@@ -126,9 +127,18 @@ router.post('/multi', async (req, res) => {
     return res.status(400).json({ error: 'phones limit is 50' });
   }
   const analyses = [];
-  for (const phone of phones) {
-    const { status, body } = analyzeHandler(phone, req.body?.groups);
-    if (status === 200) analyses.push(body);
+  for (const original of phones) {
+    try {
+      // 與單號/批次一致:自動去開頭 0 → 3-3-3
+      const { phone, groups } = autoGroup(original, req.body?.groups);
+      const { status, body } = analyzeHandler(phone, groups);
+      if (status === 200) {
+        body.input = String(original).replace(/[\s-]/g, ''); // 顯示原始號碼
+        analyses.push(body);
+      }
+    } catch {
+      // 跳過無法分析的號碼(長度怪異等)
+    }
   }
   if (analyses.length === 0) {
     return res.status(400).json({ error: '沒有可分析的有效號碼' });

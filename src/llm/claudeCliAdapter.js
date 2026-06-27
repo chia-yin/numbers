@@ -6,7 +6,7 @@ const TIMEOUT_MS = 90000;
 // 透過本機已登入的 claude CLI 產生解讀(免 API key)。
 // 有個人資料時走「個人化命理」提示詞,否則走基礎口語解讀。
 export async function generateComment(analysisResult, options = {}) {
-  const content = await buildPrompt(analysisResult, options);
+  const content = options.rawPrompt ?? (await buildPrompt(analysisResult, options));
 
   const args = ['-p'];
   if (process.env.CLAUDE_MODEL) args.push('--model', process.env.CLAUDE_MODEL);

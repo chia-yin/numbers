@@ -10,9 +10,12 @@ function buildPrompt(template, analysisResult) {
     .replaceAll('{{extended}}', JSON.stringify(analysisResult.extended));
 }
 
-export async function generateComment(analysisResult) {
-  const template = await readFile(PROMPT_PATH, 'utf8');
-  const content = buildPrompt(template, analysisResult);
+export async function generateComment(analysisResult, options = {}) {
+  let content = options.rawPrompt;
+  if (!content) {
+    const template = await readFile(PROMPT_PATH, 'utf8');
+    content = buildPrompt(template, analysisResult);
+  }
 
   const baseUrl = process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1';
   const model = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';

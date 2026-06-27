@@ -2,6 +2,31 @@ import { readFile } from 'node:fs/promises';
 
 const BASIC_PROMPT = new URL('../../prompts/phone-comment.txt', import.meta.url);
 const PERSONAL_PROMPT = new URL('../../prompts/phone-personal.txt', import.meta.url);
+const MULTI_PROMPT = new URL('../../prompts/phone-multi.txt', import.meta.url);
+
+const GRID = ['總格', '天格', '人格', '地格', '外格'];
+
+// 把多支號碼的分析整理成精簡文字(給多號比較提示詞用)
+function formatNumbers(analyses) {
+  return analyses
+    .map((a, i) => {
+      const grids = GRID.map((k) => {
+        const g = a.fiveGrid[k];
+        return `${k} ${g.value}(${g.wuxing}・${g.symbol}${g.luck})`;
+      }).join('、');
+      const good = GRID.filter((k) => a.fiveGrid[k].symbol === '○').length;
+      return `${i + 1}. ${a.input}　五格:${grids}　吉${good}/5`;
+    })
+    .join('\n');
+}
+
+// 組多號比較提示詞
+export async function buildMultiPrompt(analyses, options = {}) {
+  const template = await readFile(MULTI_PROMPT, 'utf8');
+  return template
+    .replaceAll('{{profile}}', formatProfile(options.profile))
+    .replaceAll('{{numbers}}', formatNumbers(analyses));
+}
 
 export function formatProfile(profile) {
   if (!profile || typeof profile !== 'object') return '(未提供)';

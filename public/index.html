@@ -85,6 +85,19 @@
         <textarea id="promptBox" rows="10" readonly style="width:100%;font-size:.85rem;font-family:monospace;padding:.6rem;border:1px solid #e3e8e3;border-radius:8px"></textarea>
         <button type="button" id="promptCopy" class="btn">複製提示詞</button>
       </div>
+
+      <hr style="margin:1.5rem 0;border:none;border-top:1px solid #e3e8e3">
+      <h3>多號個人比較</h3>
+      <p class="hint">填入多支號碼(一行一個),結合上方你的生辰資料,讓命理師挑出最適合你的。</p>
+      <textarea id="multiBox" rows="5" placeholder="0912559682&#10;0912539732&#10;0912526965" style="width:100%;font-family:monospace;font-size:.9rem;padding:.6rem;border:1px solid #e3e8e3;border-radius:8px;margin-bottom:.5rem"></textarea>
+      <button type="button" id="multiAiBtn" class="btn">直接分析比較</button>
+      <button type="button" id="multiPromptBtn" class="btn" style="background:#fff;color:var(--primary,#2d6a4f);border:1px solid var(--primary,#2d6a4f)">產生提示詞</button>
+      <div id="multiError" class="ai-error" hidden></div>
+      <div id="multiOut" class="ai-output" hidden></div>
+      <div id="multiPromptWrap" hidden style="margin-top:1rem">
+        <textarea id="multiPromptBox" rows="10" readonly style="width:100%;font-size:.85rem;font-family:monospace;padding:.6rem;border:1px solid #e3e8e3;border-radius:8px"></textarea>
+        <button type="button" id="multiPromptCopy" class="btn">複製提示詞</button>
+      </div>
     </section>
   </div>
 
@@ -284,6 +297,39 @@
     promptCopy.addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(promptBox.value); const o = promptCopy.textContent; promptCopy.textContent = '已複製！'; setTimeout(() => { promptCopy.textContent = o }, 2000) }
       catch { promptBox.select() }
+    })
+
+    // 多號個人比較
+    const getProfile = () => ({ name: $('pf-name').value.trim(), gender: $('pf-gender').value, birthDate: $('pf-date').value, birthTime: $('pf-time').value })
+    const getPhones = () => $('multiBox').value.split('\n').map((s) => s.trim()).filter(Boolean)
+    const multiError = $('multiError'), multiOut = $('multiOut'), multiPromptWrap = $('multiPromptWrap'), multiPromptBox = $('multiPromptBox')
+    $('multiAiBtn').addEventListener('click', async () => {
+      const phones = getPhones()
+      if (!phones.length) { multiError.hidden = false; multiError.textContent = '請至少填一支號碼'; return }
+      multiError.hidden = true; multiOut.hidden = false; multiOut.innerHTML = '<p class="loading">命理師正在比較…（約 30-60 秒）</p>'
+      const b = $('multiAiBtn'); b.disabled = true
+      try {
+        const res = await fetch('/api/analyze/multi?aiComment=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phones, profile: getProfile() }) })
+        const data = await res.json()
+        if (!res.ok) { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = data.error || '分析失敗'; return }
+        if (!data.aiComment) { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = 'AI 未產生內容(可改用「產生提示詞」貼去自己的 AI)'; return }
+        multiOut.innerHTML = renderMarkdown(data.aiComment)
+      } catch { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = '無法連線至伺服器' }
+      finally { b.disabled = false }
+    })
+    $('multiPromptBtn').addEventListener('click', async () => {
+      const phones = getPhones()
+      if (!phones.length) { multiError.hidden = false; multiError.textContent = '請至少填一支號碼'; return }
+      try {
+        const res = await fetch('/api/analyze/multi?prompt=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phones, profile: getProfile() }) })
+        const data = await res.json()
+        if (!res.ok || !data.aiPrompt) { multiError.hidden = false; multiError.textContent = data.error || '產生失敗'; return }
+        multiError.hidden = true; multiPromptWrap.hidden = false; multiPromptBox.value = data.aiPrompt
+      } catch { multiError.hidden = false; multiError.textContent = '無法連線至伺服器' }
+    })
+    $('multiPromptCopy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(multiPromptBox.value); const o = $('multiPromptCopy').textContent; $('multiPromptCopy').textContent = '已複製！'; setTimeout(() => { $('multiPromptCopy').textContent = o }, 2000) }
+      catch { multiPromptBox.select() }
     })
 
     // AI 關閉時(部署/送人版)移除 AI 進階區

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { judgeAll } from '../engine/wuxingJudge.js';
 import { DEFAULT_GROUP_CONFIG } from '../engine/groupConfig.js';
 import { generateComment } from '../llm/adapter.js';
-import { buildPrompt } from '../llm/promptBuilder.js';
+import { buildPrompt, buildMultiPrompt } from '../llm/promptBuilder.js';
 
 const WEIGHTS = {
   總格: 0.50,
@@ -114,6 +114,32 @@ router.post('/', async (req, res) => {
   }
 
   res.status(status).json(body);
+});
+
+// 多號個人比較:{ phones:[], groups?, profile }  ?prompt=true 只回提示詞;?aiComment=true 直接 AI 分析
+router.post('/multi', async (req, res) => {
+  const phones = req.body?.phones;
+  if (!Array.isArray(phones) || phones.length === 0) {
+    return res.status(400).json({ error: 'phones must be a non-empty array' });
+  }
+  if (phones.length > 50) {
+    return res.status(400).json({ error: 'phones limit is 50' });
+  }
+  const analyses = [];
+  for (const phone of phones) {
+    const { status, body } = analyzeHandler(phone, req.body?.groups);
+    if (status === 200) analyses.push(body);
+  }
+  if (analyses.length === 0) {
+    return res.status(400).json({ error: '沒有可分析的有效號碼' });
+  }
+  const out = { count: analyses.length };
+  const prompt = await buildMultiPrompt(analyses, { profile: req.body?.profile });
+  if (req.query.prompt === 'true') out.aiPrompt = prompt;
+  if (req.query.aiComment === 'true') {
+    out.aiComment = await generateComment(null, { rawPrompt: prompt, profile: req.body?.profile });
+  }
+  res.json(out);
 });
 
 export { router };

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公號數字學 — 手機號碼五格分析</title>
+<style>
+:root{--p:#2d6a4f;--pd:#1b4332;--bg:#f4f7f4;--s:#fff;--b:#e3e8e3;--mut:#6b7280;--r:12px;--sh:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04)}
+*{box-sizing:border-box}
+body{font-family:-apple-system,"Noto Sans TC",sans-serif;max-width:860px;margin:0 auto;padding:2rem 1.25rem 4rem;background:var(--bg);color:#2b2b2b;line-height:1.6}
+h1{font-size:1.6rem;color:var(--pd);margin:0 0 .25rem}
+h3{color:var(--pd);font-size:1.15rem;margin:0 0 .5rem}
+.tabs{display:flex;gap:.5rem;margin:1rem 0 1.5rem}
+.tabs button{padding:.4rem .9rem;border:1px solid var(--b);border-radius:999px;background:var(--s);color:var(--pd);cursor:pointer;font-size:.9rem}
+.tabs button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);box-shadow:var(--sh);padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+input,textarea,select{width:100%;padding:.6rem .75rem;border:1px solid var(--b);border-radius:8px;font-size:1rem;font-family:inherit;margin-top:.3rem}
+textarea{font-family:monospace;font-size:.9rem;resize:vertical}
+button.btn{background:var(--p);color:#fff;border:none;border-radius:8px;padding:.7rem 1rem;font-size:1rem;cursor:pointer;margin-top:.6rem}
+button.btn:hover{background:var(--pd)}
+.hint{font-size:.82rem;color:var(--mut)}
+table{border-collapse:separate;border-spacing:0;width:100%;margin-top:1.25rem;background:var(--s);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);font-size:.95rem}
+th,td{padding:.7rem .85rem;text-align:center;border-bottom:1px solid var(--b)}
+th{background:#eef3ef;color:var(--pd)}
+tr:last-child td{border-bottom:none}
+#verdict{padding:1.5rem 1.75rem;border-radius:var(--r);margin-top:1.5rem;box-shadow:var(--sh)}
+#verdict .lv{font-size:2rem;font-weight:700}
+.detail{margin-top:1.5rem}
+.di{border-radius:var(--r);padding:.85rem 1.1rem;box-shadow:var(--sh);margin-bottom:.6rem}
+.dh{font-weight:600;margin-bottom:.35rem}
+.dt{font-size:.92rem;line-height:1.75}
+.good{background:#d8f0de;color:#1b5e2b}.mid{background:#fdf0cf;color:#8a6100}.bad{background:#fad9dd;color:#8a1c28}
+.hide{display:none}
+.badge{font-weight:700;color:var(--pd)}
+</style>
+</head>
+<body>
+<h1>公號數字學 — 手機號碼五格分析</h1>
+<div class="tabs"><button id="t1" class="on" onclick="tab(1)">單號分析</button><button id="t2" onclick="tab(2)">批次篩選</button></div>
+
+<section id="s1">
+  <div class="card">
+    <label>手機號碼<input id="phone" inputmode="numeric" placeholder="例如 0936102682"></label>
+    <p class="hint">輸入台灣手機 10 碼,系統自動去掉開頭 0,依老師算法切 3-3-3。</p>
+    <button class="btn" onclick="one()">分析</button>
+  </div>
+  <div id="r1" class="hide">
+    <div id="verdict"></div>
+    <table><thead><tr><th>格名</th><th>數值</th><th>五行</th><th>吉凶</th></tr></thead><tbody id="grid"></tbody></table>
+    <div class="detail"><h3>各格詳解（81 數理斷語）</h3><div id="detail"></div></div>
+  </div>
+</section>
+
+<section id="s2" class="hide">
+  <div class="card">
+    <label>貼入號碼（一行一個）<textarea id="batch" rows="8" placeholder="0905239673&#10;0936102682"></textarea></label>
+    <label style="margin-top:.6rem">只看「至少幾個吉（○）」
+      <select id="mg"><option value="0">全部</option><option value="1">≥1</option><option value="2">≥2</option><option value="3">≥3</option><option value="4">≥4</option><option value="5">5全吉</option></select>
+    </label>
+    <button class="btn" onclick="many()">分析並排名</button>
+    <button class="btn" onclick="csv()" id="csvb" style="display:none">匯出 CSV</button>
+  </div>
+  <div id="stat" class="hint"></div>
+  <table id="bt" class="hide"><thead><tr><th>#</th><th>號碼</th><th>總</th><th>天</th><th>人</th><th>地</th><th>外</th><th>吉</th></tr></thead><tbody id="brows"></tbody></table>
+  <p class="hint">○ 吉　▲ 半吉　X 凶</p>
+</section>
+
+<script>
+const N={
+  "1": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "為一元復始,主開創、新生， 代表著生命欣欣向榮，享有最大之吉祥運。有威望、名譽、成功、繁榮之氣勢。象徵著新的開始，最適合業務與管理人員運用。同時大病待癒者使用此數時，數字1的靈動可協助身體康復之契機，藉著一元復始，代表著生命力的新生與茁壯。所以其數本身即有開創、掌控的領導之力。"
+  },
+  "2": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主破敗亂離之運，缺乏獨立自決的氣勢，舉棋不定、內外多波瀾、常苦不安、動搖意志、病弱遭難、辛苦一生勞而無功，難達目的。此靈動數混沌未定，主病弱 敗家、破滅無常、意志不堅、缺乏決斷力。個性上多敏感，容易缺乏意志力、少決斷力、多憂柔寡斷，行事容易舉棋不定，導致內外多波瀾等等。"
+  },
+  "3": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主吉祥如意，聰明有智慧、明理敏捷、有首領之才。多貴人助、心想事成、享自然而來之幸福、能成大業，屬大吉祥運。此數有三才會合、萬物成形。"
+  },
+  "4": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "為因變逆難之運，有不完整或破滅之相。亦為四顧茫茫、困守圍籬，故辛苦多難、枯衰破財之運。此數亦指美貌、孤獨、分離、困難、逆境、病弱。"
+  },
+  "5": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主五福臨門、馬到成功、福祿榮達之數。為人開朗有雅量、健全長壽成功運，有中興家業、外鄉成功之運，此數亦指諸事隨心所欲、有德、慈祥吉運。"
+  },
+  "6": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "吉人天相、樂極之運。溫和柔善、有德安穩、家勢盛大、財富豐裕、歡樂享福過度、樂極生悲。若他數不合者，如水就下、淪為逆境，雖不至陷大凶，一生有天賦之美德、安隱福報終世。"
+  },
+  "7": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主剛毅獨斷、精悍英敏之運。聰明超群、敏捷、精力旺盛、勇往直前、獨立單行、剛情威權，唯情緒敏感乏同理心，常釀成內外不合，但精力充足，具調理事務之能力，能破萬難而成功顯達。成功關鍵為雅量包容、擴大器局，自然吉運來照。女性得此數易流於男性化。"
+  },
+  "8": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主意志堅強、剛情進取之運。多才藝技術，意志如鐵石，忍耐克已，能排除萬難，遂其所願，名利雙得。但若過剛妄進，或他數不吉，則易遭險阻。若8數過多，易患心肺疾病。此數亦指菁華、意志、排難、鐵石、剛毅、貫注、才能、從善。"
+  },
+  "9": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主凶禍厄難、多變怪傑之運。雖有大活動力，但多變數，經營無力，窮途逆運，懷才不遇。此數雖不滿不足，沉浮不定，但志氣高昂，三才配合得當，將產生英雄、豪傑、學者、偉人，建立自信、排除萬難，可成就大業。此數亦指病弱、懷才不遇、刑罰、孤寡、離親、晚婚。"
+  },
+  "10": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主離散破敗，黑暗空虛之運。此數凶厄甚於9，代表事物告終，虛空無涯。此數有幼小離家，病弱遭難，一生多病不安，空虛無限，不測災禍，官司之運。"
+  },
+  "11": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "此數有再興、挽回先前頹廢低盪運之引用數。例如草木逢春，旱天降雨之吉象，享有天賦之幸運，代表主人做事順序發展即可繁榮富貴。最適合第一線之業務人士使用，代表著客戶、有人一個介紹一個進來，如獲春雨般滋潤、繁榮之象。相對地，此數有桃花暗藏，因此運用此靈動數者須斟酌。"
+  },
+  "12": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "此數內在多孤獨，雖外表看起來鮮華風光，喜歡熱鬧，因此結友四海，恐弊多利少，經常遭友所累，可稱之為外祥內苦；雖才華橫溢，但容易忘形導致挫敗。建議多守本份，免遭無依之苦。此數者與家屬緣弱，財運不佳，往往左邊來右邊去，或遭劫財，因此，建議有計畫的儲蓄是必要的，同時節流也是積財的方法之一。"
+  },
+  "13": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主博學多聞、富學藝才能、有智謀奇略，具柔和忍耐力、處理事情之能力可破任何難關，能得人望、得天助貴人助、建立大業天助人助之運，但若過於自做聰明，反失吉運。成功關鍵在於善用智慧、用藝人和。"
+  },
+  "14": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "家庭、六親緣弱、孤獨不如意、作事中途而廢。外柔內剛，但天賦聰穎，若三才配合得當，再加進取心將獲良機，有例外之怪傑、偉人創大業。此數亦指離散、美貌、徒勞無功、失意、危難、病弱。成功關鍵為忍苦堅毅。"
+  },
+  "15": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主為福壽圓滿興家之運。為人溫順高雅、慈祥有德、得上下信望尊敬、成大事業。主財運、繁榮、福壽雙全。"
+  },
+  "16": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主仁慈雅量厚重、有貴人助、能化凶反吉，且得眾望、名利雙收、發達之福份。為領導數，女人可用之。此數亦指領導、貴人助、穩健、福祿壽三星拱照。"
+  },
+  "17": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主權威、意志堅定、富突破性之氣魄。但容易固執已見，威權過重、缺包容力、自我心強、與人不合、反招是非、遭災失敗。此數不屈不撓、氣力可破難關、成就大業。但女性易流於男性化、若存溫和、好運自來。先天太弱之人反要此數調合。"
+  },
+  "18": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主威智通達、進取成功之運。穎悟非凡，格局大，有旺盛進取心，可貫徹始終，成功發達，名利雙收。唯自我心強，恐遭是非，宜養柔德，包容氣肚，順應進取，如能慎始，百事亨通。此數亦指過剛、聰明、排難。"
+  },
+  "19": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主艱辛多難，實力難展之運。雖有才能智慧，活動性強，可建大事業，但因過剛而多生意外。身苦心煩，內外不合，慎防虧空，或有官煞逃亡。"
+  },
+  "20": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主破滅衰亡、短命非業之運。生不得平安，危機四伏，災難遍至，凶禍頻臨，陷逆境，期中有廢疾而無法支持家業，或幼時別親，陷困苦。三才配合得宜可創大業。此數為物將壞之運、若為主運，終將悲慘，進退兩難。"
+  },
+  "21": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主獨立權威、富有創造力與說服力之靈動數能，有登階漸進之象，有著先苦後甘而大搏聲名之兆數。特別適合以口才為業者，例如講師、業務、表演者。然此數代表內心果斷、掌控能力強，難免孤傲自尊，宜培養包容力。為人重視名譽、有責任心之數，有著中年發達之吉祥運數。"
+  },
+  "22": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主才華之數，內在易生不平之鳴，有懷才不遇之感，但運勢上包括感情、婚姻，亦是秋草逢霜、諸事不如意。因此它是一個悲愁之數，此數者多半相貌姣好，感情因果強烈、很有異性緣，切不可恃其而驕或遊戲人間，需防桃色凶禍。"
+  },
+  "23": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主為威勢沖天之領導運，雖白手起家但能漸次高昇、展露頭角，富智略奇謀、情感敏銳，克難果敢、功業隆昌之勢。此數女人審用之恐損姻緣。成功關鍵在臨事心不亂。"
+  },
+  "24": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主溫和順良、財源廣進之運。此數才智兼備、處事融通、勤儉建業、白手起家、財源廣進豐厚、越老越豐。成功關鍵為多靠自力、智謀進取。"
+  },
+  "25": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主英姿靈敏、奇才風發之運。雖秉性聰明、個性怡情、地位權貴、有奇才。但須注意人和，有不平之嫌，容易意氣用事，若涵養不足易成怪人。交際欠平和，雖有小困難不足為害，謹慎從事，有成功發達之運。成功關鍵為仁和恭敬、講信修睦。"
+  },
+  "26": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "此數怪異，主天賦聰穎、具俠義精神，少時災害並至，晚年幸福偕來。此數亦為變動無常、風波不斷、波瀾重疊、怪異之英雄運格。此數多精電腦或以其為主業，亦有致死地而後生、臨萬難而成功者。"
+  },
+  "27": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主消沉孤僻、是非不息之運。雖聰明英敏、發育早熟，但本位主義重，雖有成功，恐為期不長，因自尊心太強，多招誹謗攻擊、而致失敗。"
+  },
+  "28": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主遭難別離之運。為人豪爽，有豪傑氣概，多波瀾變動。但藏空虛滅亡、禍亂別離之運。即使一一時機會，也隨來意外之災厄，一生辛勞不絕，難免遭誹謗傷害、官災刑罰。女人多陷孤寡，此數不吉，緣到改之。"
+  },
+  "29": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主智謀浪漫、活力充沛之運。成功後有權力、財力，但若過剛將弄巧成拙，若欲望不足，任意從事，必招失敗。此數女人易流於男性化，先天弱者勿用。此數有專業才能，自得機會財利，但性情浪漫，恐生桃色糾紛。"
+  },
+  "30": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "沉浮不定、勝敗難分之運，若配吉運可成大功，若配凶運，陷失敗、孤獨、吉凶並行，誘發投機心，如探礦、賭博一樣，僥倖奇遇大成有之，然失敗者居多，主沉浮不定之波瀾數。"
+  },
+  "31": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "此數主智仁勇兼備、溫和、穩定、踏實、意志堅定能破難關達成目地，為圓滿和順之大吉祥運數，最適女性使用之最大吉祥運。代表著內心溫良、和善，堅忍意志、不屈不撓之數。特別適用服務業、化妝業或企劃行銷以及財會之管理數，象徵著統籌與整合之力。"
+  },
+  "32": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主溫良親和、常得長上庇護，有照顧他人之美德、家門隆昌、財源豐裕吉數。此數防財多體弱，男性膽識稍嫌不足，應提升自已膽量和氣勢，才不易被人吃定。此數亦有意外良機。"
+  },
+  "33": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主旭日東昇、旺盛至極之首領運。代表剛毅果斷、權威智謀、智能雙全、能功成名就業，有大奇才。但此數過剛且貴重，常人勿用，不適女性使用，恐孤寡甚烈。 若過剛意氣用事，失人和、反誤事、招是非，需知物極必反之天理。成功關鍵在謙和、勿用霸威。"
+  },
+  "34": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主辛苦之運數。此數容易虛有其表、困苦，若運勢凶者、疾痛短運、刑傷。此數多為晚婚或喪偶、體弱多病較孤寡，此數不吉、緣到改之。"
+  },
+  "35": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主溫良和順、保守平安之運。溫和保守、富才藝學能、靠自力而獲成功。此數缺威嚴膽識、不足首領，最適女人用之。此數多感情、最宣文藝技藝，若三才配合得當，如水漲船高般生權勢、自然逢貴人助之，為大吉。"
+  },
+  "36": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主波浪難安、入不敷出之運。雖有俠義精祥、但有才無運。雖為人敦厚、捨已為仁、但理財能力薄弱無法量入為出，活動力越大、支出受損越烈，僅少數人可例外成功（其他吉數相輔），但大多謀事不成。"
+  },
+  "37": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主獨立權威、逢凶化吉之運。為人老實忠厚、溫和順暢、有才能智慧、美德慈祥、熱誠忠烈、以德服人，有天賜吉運，可成大功業。成功關鍵在涵養包容，以德取眾。"
+  },
+  "38": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主意志薄弱、有名無利之運。無大志，薄志平凡，乏統率之威望與手段，難貫徹始終，常陷不幸。若往技藝發展，有相當上進之機會，此數藝術成功者多，但名大於利，利則難獲。"
+  },
+  "39": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主權勢威霸、光明榮達之運。權威壓制天下，一令發出萬眾附合，才謀盈身。但貴極必反，常人勿用，女人用之孤寡。此數容易功高震主，慎防，或可反成貴重為貴福之格。"
+  },
+  "40": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主知進不退、傲慢刑傷之運。雖智識才能優異，具膽力冒險精神，但傲氣凌人，知進不知退，易受誹謗攻擊，若得成功終難免失敗。若運勢配合不宜者，恐有刑傷短命，保守即安。此數有破壞，進則惹禍，退則稍安之靈動。"
+  },
+  "41": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主膽識、才略兼具、健全、有德，和順能破難關達成目的，前途不可限量，為成大志大業獲取名利之洋洋得意大吉祥運。個性上代表著為人禮節守份，溫恭有德，穩重循次，可以展現實力，漸次發展，是名利雙收之吉數。"
+  },
+  "42": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "為多能無成之運。雖多才多藝，有聰明才智但缺乏意志與野心，且目標太多，博而不精，不能專心衝刺到底，只要立志進取、落實行動即可成功。此數無動力，多呈半退休狀。"
+  },
+  "43": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主散財破產之運。此數帶有意志薄弱不堅、缺乏企圖野心、容易因循姑息之意。雖有才能智慧、曾一時風光，唯過份權術、班門弄斧、致諸事不順。應預防入不敷出、外表幸福、內心困苦之結果。"
+  },
+  "44": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主厄運重重，六親緣弱，多勞苦、難展大志，有無奈感，切忌貪功好進、易遭失敗。但也有少數之大發明家、孝子節婦、偉人烈士、怪傑從此數出。"
+  },
+  "45": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主吉運高照、一帆風順之運。有雅量寬宏、智謀遠大、一帆風順、可成大事大業，富貴榮華至極。若他數有凶數，如船失舵，生有一次大災難，如九死一生，浩劫餘生後必有後福。"
+  },
+  "46": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主薄志不全、坎坷之運。此數容易產生心裡不平衡、缺乏精力、思想偏激、屬變怪之命運。一生難平安，困苦不離身，但因其數為變怪，,過大難關而成功者亦有，故其他吉數來輔非常重要。"
+  },
+  "47": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主圓滿吉慶、花開富貴之運連。此數亦指權威、尊貴、禎祥吉慶，為草木逢春、可得長上提拔、或與他人合作成大事業之吉運。"
+  },
+  "48": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主智高望重，華美豐實之運。才能謀略兼具，智略超人，才華洋溢，為人師表，享功利榮達，名利雙收，繁榮富裕之運。"
+  },
+  "49": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主吉凶難斷之數，需賴他數斷之。處吉凶之歧路，吉來則吉生大吉，凶來則凶生大凶。易生變化之運格，幸與不幸，端賴三才吉凶論定，但定多災難困苦。此數須靠謹慎自可逢凶化吉。"
+  },
+  "50": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主吉凶交替，前吉後凶之運。早年得成功，享福祿。晚年遭失敗。若他數為凶數，更添凶相。此數有破壞之靈動。"
+  },
+  "51": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "雖有天賜幸運，但缺乏實力，晚年落於挫折困頓。此數靈動先盛後衰、吉中藏凶，因挫折而導致後期失敗之數。為人外表洒脫率性，不注重小節，容易耳根軟，禁不起激將，個性上容易自我矛盾，需防潦倒困頓、病弱、受累、挫折之運。尤其 不宜幫他人做保簽署相關證書文件等等，易有官司纏身。"
+  },
+  "52": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "此數為專業之數，代表有專業能力，能成為行業中之翹楚，有先見之明，能舉一反三，個性溫和，健全發展，有投機心與謀略。此數主名不主利，且一生中必有驚險，但亦為險中求勝突破為難之數，需防感情事件。"
+  },
+  "53": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "此為吉凶互換之數。有盛衰參半、外表吉祥實內禍患，前盛後衰、或是前衰後盛之象，若得他數相救僅得平安。"
+  },
+  "54": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主多災多難不和順、煩瑣遭難多辛酸，此數憂鬱、逆境、病弱、刑傷、緣到改之。"
+  },
+  "55": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主禍福參半、凶隨吉來之運。意志薄弱、表面平順實災害百出。成功關鍵為堅心固志、衝破難關。此數亦指薄志無力、厄運、病弱 。"
+  },
+  "56": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主意志消沉、缺乏進取心與實行之勇氣，故容易志與願違，事不如意，難望成功，有意外之損。成功關鍵為養精蓄銳、不屈不撓。此數亦指散財、逆境、病弱、變死、失敗、破滅、敗家、孤獨。"
+  },
+  "57": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主百事亨通之運。此數豪邁、剛毅果決、魄力十足、膽勢過人、享天賦之榮華富貴、萬事如意之運。若他數中有凶數、一生恐遭一次大災難，而後享吉祥繁榮。此數亦指溫和、健全、發達、威望、富貴、長壽、名譽。"
+  },
+  "58": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主沉浮多端，晚年餘慶之運。此數沉浮多端、福禍無常，雖天賦福份，但一生必遭大失敗或傾家蕩產，然後努力發展，晚年得繁榮富貴，如倒吃甘蔗、先苦後甘之運。"
+  },
+  "59": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主乏力之運，破家敗產，意志衰退，乏氣力缺忍耐，無成事之運。退氣之數，緣到改之。"
+  },
+  "60": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主一事無成之運。無謀無算，難定目標，個性出爾反爾，一生作事無成，搖動不安，致陷失敗、刑罰、疾患、暗淡無光之靈動。"
+  },
+  "61": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主獨立、自主性強，外表好說 話內心不然，行事重邏輯、野心強，雖有繁榮富貴吉兆，但須防因傲慢不遜，導至內外不合、兄弟鬩牆、家庭反目之危機。此靈動數雖有名利雙收、發達、健全、威望、富貴、長壽之運，但仍應多求人和。"
+  },
+  "62": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主衰敗困厄，雖有祖產，難免破敗，如秋草逢霜、內外不合、缺乏信用、意外災害頻來之境。成功關鍵在於養精蓄銳，不屈不撓，可改善凶運。"
+  },
+  "63": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主得富貴榮昌、富傳子孫之運。有萬事如意、逢凶化吉、漸次發展如萬物惠承天露而發育壯大之兆。此數象徵溫和、健全、發達。成功關鍵在專心一意，自然可成。"
+  },
+  "64": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主破壞滅離之運，終身勞碌、十九不成、六親緣弱。此數不吉，緣到改之。"
+  },
+  "65": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主富貴福壽成功之運。為人溫文篤厚、一生平安貴重。溫和平安有權勢、多情感、最宜文藝。若三才配合得宜，如水漲船高生權威，自然逢貴人扶持之大吉運數。"
+  },
+  "66": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主表裡不一、進退無據、艱難辛苦、衰滅失望、事與願違，徒勞無功之運。此數亦指失信、放蕩、病弱、逆境、困難、不和。"
+  },
+  "67": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主志望通達、家道繁盛之運。此數如草木逢春般發達成功，得長上援助、獨立經營、事事如意、萬事無障礙而達成目的，繁榮富貴，為最大之家道繁盛數。"
+  },
+  "68": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "主奮發圖強、興家致富之運。智慧周密、有研發之機能，可獨立自營，可名利雙收。"
+  },
+  "69": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主失意不安，不得時運。進退維谷，傾家蕩產，窮破滯塞，動搖不安，不得時運，難有利潤。"
+  },
+  "70": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主異常凶惡之運。一生慘澹，憂愁不絕，常感虛空寂寞、命運多變、殺傷刑罰。此數大凶，緣到改之。"
+  },
+  "71": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主內心勞苦、先苦後甘之運，代表初始可能一無所成，需養精蓄銳、等待時機大振作，才可成就非凡名利可獲。但其中需防勞苦、逆境、病弱、破滅等等之象。成功關鍵在需能臥薪嚐膽、長久忍耐及大勇氣。此數企圖心頗大，為人喜哲理、好大喜功、掌控欲望大，需防驕氣過盛，易失人和。"
+  },
+  "72": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主為悲運極端，苦中作樂之象，此數帶有煩憂苦悶、吉凶相伴、外實內虛、早年一時幸運發展、晚年恐破損之象，宜善用之。"
+  },
+  "73": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "為志向高遠但無成運。代表有志無行、有謀無勇，恐心有餘而力不足。作事應小心，一步一腳印、積少成多晚年必豐，餘慶可延子孫。成功關鍵在力行不懈。"
+  },
+  "74": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主逆難非運，一生多沉淪、窮途逆境、容易坐吃山空。此數亦指窮途、逆境、病弱、破滅、無力、橫災。"
+  },
+  "75": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主退守保安之運。智謀超群、膽勢非凡、雖有吉運，但缺乏周詳計劃，作事怠惰，不善經營，具冒險投機心，易受人連累、算計而失敗。成功關鍵為以靜制動、三思後行。"
+  },
+  "76": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主外吉內苦、寸步難行、財源敗退、離散顛簸、病弱困苦之運。此數不吉、緣到改之。"
+  },
+  "77": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主吉凶參半之運。雖多得長上援護，但有名無實、福禍各半。若與他人協心合作可得成功，但因人多事雜，常被小人算計。前半生多凶厄，則後半生吉祥，若前半生順遂則後半生多舛。此數亦指逆境、病弱、有禍。"
+  },
+  "78": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "吉凶參半，但凶多於吉，有得有失，需防劫財，方保安順。"
+  },
+  "79": {
+    "symbol": "X",
+    "luck": "凶",
+    "text": "主志力難伸，窮困不堪之運。自尊心高，精神不定，內外不和，乏成事之計謀才能，受攻擊非難，窮苦不堪之逆境之數。"
+  },
+  "80": {
+    "symbol": "▲",
+    "luck": "半吉",
+    "text": "主隱遁修行之運。一生吉凶並來，困苦病患刑傷。應早修身養性，積功累德，可安心立命，轉凶為吉。"
+  },
+  "81": {
+    "symbol": "○",
+    "luck": "吉",
+    "text": "最極之數，即返樸歸真、還元之數。故與數字1相同，榮華富貴、名利長壽，享天賜之福份。"
+  }
+};
+const PRELOAD=[];
+const G=['總格','天格','人格','地格','外格'];
+const CLS={'○':'good','▲':'mid','X':'bad'};
+function wux(d){d=+d;if(d===1||d===2)return'木';if(d===3||d===4)return'火';if(d===5||d===6)return'土';if(d===7||d===8)return'金';return'水'}
+function n81(v){let k=v;if(k<1||k>81)k=((k-1)%80+80)%80+1;return N[k]||{symbol:'?',luck:'?',text:''}}
+function analyze(raw){
+  let p=String(raw).replace(/[^0-9]/g,'');if(!p)return null;
+  let g;if(p.length===10&&p[0]==='0'){p=p.slice(1);g=[3,3,3]}else if(p.length===9)g=[3,3,3];else{const r=p.length-6;g=r>0?[3,3,r]:[p.length]}
+  let off=0,parts=[];for(const len of g){parts.push(p.slice(off,off+len));off+=len}
+  const sum=s=>[...s].reduce((a,c)=>a+ +c,0);
+  const n1=sum(parts[0]||''),n2=sum(parts[1]||''),n3=sum(parts[2]||'');
+  const vals={總格:n1+n2+n3,天格:n1+1,人格:n1+n2,地格:n2+n3,外格:n3+1};
+  const out={};let good=0;
+  for(const k of G){const v=vals[k];const m=n81(v);if(m.symbol==='○')good++;out[k]={value:v,wuxing:wux(v%10),symbol:m.symbol,luck:m.luck,text:m.text}}
+  return{phone:String(raw).replace(/[^0-9]/g,''),grids:out,good}
+}
+function tab(n){t1.className=n===1?'on':'';t2.className=n===2?'on':'';s1.className=n===1?'':'hide';s2.className=n===2?'':'hide'}
+function lvl(g){return g>=4?'大吉':g>=3?'吉':g>=2?'半吉':g>=1?'帶凶':'凶'}
+function one(){
+  const a=analyze(phone.value);if(!a){return}
+  r1.className='';
+  const tot=a.grids.總格;verdict.className=CLS[tot.symbol];
+  verdict.innerHTML='<div class="lv">'+lvl(a.good)+'</div><div>五格中 '+a.good+' 個吉（○）</div>';
+  grid.innerHTML=G.map(k=>{const x=a.grids[k];return '<tr class="'+CLS[x.symbol]+'"><td>'+k+'</td><td>'+x.value+'</td><td>'+x.wuxing+'</td><td>'+x.symbol+' '+x.luck+'</td></tr>'}).join('');
+  detail.innerHTML=G.map(k=>{const x=a.grids[k];return '<div class="di '+CLS[x.symbol]+'"><div class="dh">'+k+'　'+x.value+'　'+x.wuxing+'　'+x.symbol+' '+x.luck+'</div><div class="dt">'+(x.text||'')+'</div></div>'}).join('');
+}
+let last=[];
+function many(){
+  const list=batch.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const min=+document.getElementById('mg').value;
+  const res=list.map(analyze).filter(Boolean).filter(a=>a.good>=min).sort((x,y)=>y.good-x.good);
+  last=res;
+  brows.innerHTML=res.map((a,i)=>'<tr><td>'+(i+1)+'</td><td>'+a.phone+'</td>'+G.map(k=>'<td class="'+CLS[a.grids[k].symbol]+'">'+a.grids[k].symbol+'</td>').join('')+'<td class="badge">'+a.good+'/5</td></tr>').join('');
+  stat.textContent='共 '+list.length+' 筆,符合 '+res.length+' 筆';
+  bt.className=res.length?'':'hide';csvb.style.display=res.length?'':'none';
+}
+function csv(){
+  if(!last.length)return;
+  const h=['排名','號碼','吉數',...G.flatMap(k=>[k+'數值',k+'五行',k+'吉凶',k+'斷語'])];
+  const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const rows=last.map((a,i)=>[i+1,'="'+a.phone+'"',a.good+'/5',...G.flatMap(k=>{const x=a.grids[k];return[x.value,x.wuxing,x.luck,x.text]})].map((c,j)=>j===1?c:esc(c)).join(','));
+  const blob=new Blob(['\ufeff'+[h.map(esc).join(','),...rows].join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const u=URL.createObjectURL(blob);const link=document.createElement('a');link.href=u;link.download='五格分析.csv';link.click();URL.revokeObjectURL(u);
+}
+// 若 build 時已烤入號碼,開檔自動載入並分析
+if(PRELOAD.length){tab(2);document.getElementById('batch').value=PRELOAD.join('\n');many()}
+</script>
+</body>
+</html>

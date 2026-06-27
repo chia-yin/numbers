@@ -101,12 +101,12 @@ export async function fetchViaBrowser(source) {
     if (source.iterateSelect) {
       await page.goto(source.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await runSteps(page, source.steps);
-      return iterateSelectCrawl(page, source);
+      return await iterateSelectCrawl(page, source);
     }
 
     await page.goto(source.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await runSteps(page, source.steps);
-    return scrape(page, source.selector);
+    return await scrape(page, source.selector);
   } finally {
     await browser.close();
   }

@@ -224,7 +224,7 @@
       if (!source || (source.type !== 'url' && source.type !== 'browser')) { showError('此來源不支援自動抓取'); return }
       if (!source.url) { showError('此來源缺少 URL 設定'); return }
       const payload = source.type === 'browser'
-        ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs, iterateSelect: source.iterateSelect }
+        ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs, iterateSelect: source.iterateSelect, cht: source.cht }
         : { type: 'url', url: source.url, selector: source.selector }
       crawlBtn.disabled = true
       crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（首次較慢）' : '抓取中…'

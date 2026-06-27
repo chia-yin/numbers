@@ -22,14 +22,10 @@
     "name": "中華電信 CHT 選號查詢（全前綴）",
     "type": "browser",
     "url": "https://bms.cht.com.tw/mbms/NewApply/findAvailable.jsp",
-    "delayMs": 1000,
-    "iterateSelect": {
-      "optionPattern": "^09\\d\\d$",
-      "submitText": "確定查詢",
-      "waitMs": 2500
-    },
+    "delayMs": 600,
+    "cht": true,
     "enabled": true,
-    "note": "自動遍歷「前四碼」下拉(0900,0901,…)每個前綴送出查詢並抓號。會跑多輪、較久。若抓不到,把實際送出按鈕文字/下拉 name 告訴我微調。"
+    "note": "直接打 CHT findAvailableProc.jsp API:自動抓前四碼清單,逐前綴翻頁抓所有可選號碼(免瀏覽器)。"
   },
   {
     "id": "example-url",

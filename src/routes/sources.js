@@ -24,6 +24,7 @@ function toPublicSource(source) {
     delayMs: source.delayMs,
     steps: source.steps,
     iterateSelect: source.iterateSelect,
+    cht: source.cht,
   };
 }
 

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: gonghao-numbers
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # 主機沒有 claude CLI,關掉 AI 解析(五格/斷語/爬蟲不受影響)
+      - key: LLM_PROVIDER
+        value: none
+      # 不下載 Playwright 瀏覽器(CHT 爬蟲走純 fetch 不需要;FET 在免費主機不支援)
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: '1'

@@ -37,10 +37,10 @@ export function rankHandler(body) {
     };
   }
 
-  if (candidates.length > 200) {
+  if (candidates.length > 20000) {
     return {
       status: 400,
-      body: { error: 'candidates limit is 200' },
+      body: { error: 'candidates limit is 20000' },
     };
   }
 

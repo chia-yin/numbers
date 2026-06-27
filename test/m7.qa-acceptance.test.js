@@ -71,11 +71,11 @@ async function requestAppJson(method, path, payload) {
 }
 
 test('m7 acceptance: POST /api/rank rejects more than 200 candidates with HTTP 400', async () => {
-  const candidates = Array.from({ length: 201 }, (_, index) => `09${String(index).padStart(8, '0')}`);
+  const candidates = Array.from({ length: 20001 }, (_, index) => `09${String(index).padStart(8, '0')}`);
   const response = await requestAppJson('POST', '/api/rank', { candidates });
 
   assert.equal(response.status, 400);
-  assert.deepEqual(response.body, { error: 'candidates limit is 200' });
+  assert.deepEqual(response.body, { error: 'candidates limit is 20000' });
 });
 
 test('m7 acceptance: POST /api/rank 依吉(○)數排序並加上 rank/goodCount', async () => {

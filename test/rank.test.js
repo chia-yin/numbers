@@ -44,11 +44,11 @@ test('rank: minGood 超出 0–5 回 400', () => {
 });
 
 test('rank: rejects more than 200 candidates', () => {
-  const candidates = Array.from({ length: 201 }, (_, i) => `09${String(i).padStart(8, '0')}`);
+  const candidates = Array.from({ length: 20001 }, (_, i) => `09${String(i).padStart(8, '0')}`);
   const { status, body } = rankHandler({ candidates });
 
   assert.equal(status, 400);
-  assert.equal(body.error, 'candidates limit is 200');
+  assert.equal(body.error, 'candidates limit is 20000');
 });
 
 test('rank: skips invalid candidates without throwing', () => {

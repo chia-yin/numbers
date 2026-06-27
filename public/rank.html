@@ -52,6 +52,7 @@
     </label>
     <div id="crawlControls" hidden style="margin-top:0.75rem">
       <button type="button" id="crawlBtn" class="btn">抓取號碼</button>
+      <button type="button" id="dlRawBtn" class="btn" hidden>下載抓取號碼</button>
       <div id="crawlPreview" class="hint" style="margin-top:0.5rem"></div>
     </div>
   </div>
@@ -106,6 +107,7 @@
     const manualInput = $('manualInput')
     const crawlControls = $('crawlControls')
     const crawlBtn = $('crawlBtn')
+    const dlRawBtn = $('dlRawBtn')
     const crawlPreview = $('crawlPreview')
     const minGoodInput = $('minGood')
     const groupsInput = $('groups')
@@ -216,6 +218,16 @@
     }
     csvBtn.addEventListener('click', downloadCsv)
 
+    dlRawBtn.addEventListener('click', () => {
+      if (!crawledCandidates.length) return
+      const blob = new Blob([crawledCandidates.join('\n')], { type: 'text/plain;charset=utf-8' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `抓取號碼_${new Date().toISOString().slice(0, 10)}.txt`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    })
+
     sourceSelect.addEventListener('change', updateSourceMode)
 
     crawlBtn.addEventListener('click', async () => {
@@ -238,6 +250,7 @@
         crawledCandidates = data.candidates || []
         const preview = crawledCandidates.slice(0, 5).join('、')
         crawlPreview.textContent = `已抓取 ${crawledCandidates.length} 筆，前 5 筆：${preview || '（無）'}`
+        dlRawBtn.hidden = crawledCandidates.length === 0
       } catch {
         showError('無法連線至伺服器，請確認服務是否已啟動'); crawlPreview.textContent = ''
       } finally { crawlBtn.disabled = false }

@@ -259,6 +259,11 @@
       }
     })
 
+    // AI 關閉時(部署/送人版)移除 AI 進階區
+    fetch('/api/config').then((r) => r.json()).then((c) => {
+      if (!c.ai) { const a = document.getElementById('aiSection'); if (a) a.remove() }
+    }).catch(() => {})
+
     // 從 rank.html 帶號碼進來自動分析
     const _pre = new URLSearchParams(window.location.search).get('phone')
     if (_pre) { phoneInput.value = _pre; form.requestSubmit() }

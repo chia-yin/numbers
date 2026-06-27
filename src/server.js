@@ -13,6 +13,10 @@ app.use('/api/analyze', analyzeRouter)
 app.use('/api/crawl', crawlRouter)
 app.use('/api/rank', rankRouter)
 app.use('/api/sources', sourcesRouter)
+// 前端據此決定要不要顯示 AI 區(LLM_PROVIDER=none 即關閉,部署/送人版純淨無 AI)
+app.get('/api/config', (req, res) => {
+  res.json({ ai: (process.env.LLM_PROVIDER ?? 'cli') !== 'none' })
+})
 app.use(express.static('public'))
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

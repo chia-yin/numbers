@@ -1,5 +1,8 @@
 import express from 'express'
 import { fileURLToPath } from 'node:url'
+
+// 載入 .env(若存在):提供 FET_ACCOUNT/FET_PASSWORD、LLM 設定等
+try { process.loadEnvFile() } catch { /* 無 .env 略過 */ }
 import { router as analyzeRouter } from './routes/analyze.js'
 import { router as crawlRouter } from './routes/crawl.js'
 import { router as rankRouter } from './routes/rank.js'

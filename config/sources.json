@@ -31,6 +31,19 @@
     "note": "直接打 CHT findAvailableProc.jsp API:自動抓前四碼清單,逐前綴翻頁抓所有可選號碼(免瀏覽器)。"
   },
   {
+    "id": "fet-ecare-booking",
+    "name": "遠傳 ecare 預約門號（需登入）",
+    "type": "browser",
+    "url": "https://ecare.fetnet.net/DigService/help-center/bookingMsisdn",
+    "delayMs": 600,
+    "fet": {
+      "excludeFour": false,
+      "delayMs": 800
+    },
+    "enabled": true,
+    "note": "需在 .env 設 FET_ACCOUNT / FET_PASSWORD。心生活兩段式登入後,逐前綴打 queryAvailableMsisdn API 收號。風控出現必填驗證碼時自動登入會失敗。prefixes 留空＝自動讀頁面全部前綴。"
+  },
+  {
     "id": "example-url",
     "name": "示範:靜態 URL 來源(fetch)",
     "type": "url",

@@ -1,6 +1,7 @@
 import { extractFromHtml, extractFromText } from './parser.js';
 import { fetchViaBrowser } from './browser.js';
 import { fetchCht } from './cht.js';
+import { fetchFetEcare } from './fetEcare.js';
 import { checkRobots, sleep } from './politeness.js';
 
 const USER_AGENT = 'gonghao-numbers-crawler/1.0 (educational; contact: see package.json)';
@@ -28,6 +29,10 @@ export async function fetchCandidates(source) {
     // 中華電信:有真實 API,直接 fetch(免瀏覽器)
     if (source.cht) {
       return fetchCht(source);
+    }
+    // 遠傳 ecare 預約門號:需登入,無頭瀏覽器登入後逐前綴抓
+    if (source.fet) {
+      return fetchFetEcare(source);
     }
     // 其他 JS 動態網站:用無頭瀏覽器渲染後抓號
     await sleep(source.delayMs ?? 1000);

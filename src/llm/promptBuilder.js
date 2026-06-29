@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { computeDayMaster } from '../engine/bazi.js';
 
 const BASIC_PROMPT = new URL('../../prompts/phone-comment.txt', import.meta.url);
 const PERSONAL_PROMPT = new URL('../../prompts/phone-personal.txt', import.meta.url);
@@ -39,6 +40,11 @@ export function formatProfile(profile) {
   if (profile.gender) lines.push(`性別:${profile.gender}`);
   if (profile.birthDate) lines.push(`國曆生日:${profile.birthDate}`);
   if (profile.birthTime) lines.push(`出生時辰:${profile.birthTime}`);
+  const dm = profile.dayMaster || computeDayMaster(profile.birthDate, profile.birthTime);
+  if (dm) {
+    const label = typeof dm === 'string' ? dm : dm.label;
+    lines.push(`命主日元(日主):${label}　← 以此論喜用神,號碼五行能生扶/補益日主者為佳`);
+  }
   return lines.length ? lines.join('\n') : '(未提供)';
 }
 

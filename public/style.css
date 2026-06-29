@@ -264,6 +264,13 @@ details.advanced[open] { padding-bottom: 0.5rem; }
 .sancai .sc-desc { font-size: .92rem; color: var(--muted); }
 .sancai .sc-energy { margin: .8rem 0 .3rem; padding-top: .7rem; border-top: 1px dashed var(--border); font-size: 1rem; letter-spacing: .5px; }
 
+/* 日主 */
+.daymaster { margin: 0.25rem 0 1rem; padding: 0.7rem 1rem; background: #eef3ef; border-radius: 8px; font-size: 0.95rem; color: var(--primary-dark); }
+.daymaster .dm-note { color: var(--muted); font-size: 0.82rem; margin-left: 0.4rem; }
+
+/* 四季旺弱標籤 */
+.season-tag { font-size: 0.78rem; padding: 0.08rem 0.5rem; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); font-weight: 400; }
+
 /* 結果淡入 */
 .fade-in { animation: fadeInUp 0.4s ease both; }
 @keyframes fadeInUp {

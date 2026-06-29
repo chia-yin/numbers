@@ -102,6 +102,25 @@ export function computeSancai(fiveGrid) {
   return { 天才: t, 人才: r, 地才: d, 配置: `${t}-${r}-${d}`, 天人關係: tr, 人地關係: rd, luck, desc };
 }
 
+// 四季論強弱:數值十位定四季(0,1春/2,3夏/4,5秋/6,7冬),五行於旺季強
+// 旺=當令/生長季,相=生我之季,其餘弱。木依老師特例:春夏旺、秋冬弱。
+const SEASON_BY_TENS = ['春', '春', '夏', '夏', '秋', '秋', '冬', '冬', '春'];
+const SEASON_PEAK = { 木: ['春', '夏'], 火: ['夏'], 土: ['夏'], 金: ['秋'], 水: ['冬'] };
+const SEASON_THRIVE = { 火: '春', 土: '夏', 水: '秋' }; // 生我之季(相);木不採
+export function computeSeason(value, wuxing) {
+  const tens = Math.floor((value % 100) / 10);
+  const season = SEASON_BY_TENS[tens] ?? '春';
+  let label, desc;
+  if (SEASON_PEAK[wuxing]?.includes(season)) {
+    label = '旺'; desc = `${season}之${wuxing},當令得時,能量旺。`;
+  } else if (SEASON_THRIVE[wuxing] === season) {
+    label = '相'; desc = `${season}之${wuxing},得生扶,能量尚強。`;
+  } else {
+    label = '弱'; desc = `${season}之${wuxing},失令,能量偏弱。`;
+  }
+  return { season, label, desc };
+}
+
 // 五格五行能量分布:同一五行最多兩個;出現三個以上=能量過於集中、缺其他助力
 export function computeEnergyBalance(fiveGrid) {
   const counts = {};

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { judgeAll } from '../engine/wuxingJudge.js';
+import { judgeAll, computeSeason } from '../engine/wuxingJudge.js';
 import { DEFAULT_GROUP_CONFIG } from '../engine/groupConfig.js';
 import { generateComment } from '../llm/adapter.js';
 import { buildPrompt, buildMultiPrompt } from '../llm/promptBuilder.js';
@@ -42,6 +42,7 @@ function transformResult(result) {
       luck: numerology.luck,
       text: numerology.text,
       weight: WEIGHTS[key],
+      season: computeSeason(grid.value, grid.wuxing),
     };
     if (key !== '總格') {
       entry.relation = result.wuxingRelations[key].relation;

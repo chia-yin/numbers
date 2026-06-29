@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公號數字學 — 一秒看懂你的手機號碼旺不旺</title>
+<meta name="description" content="輸入手機號碼,立即算出五格吉凶、五行生克與81數理斷語。結合你的生辰,AI 命理師給你專屬解讀,還能批次篩出最旺你的好號。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--p:#2d6a4f;--pd:#1b4332;--gold:#b8860b;--bg:#f4f7f4;--s:#fff;--text:#2b2b2b;--mut:#6b7280;--b:#e3e8e3;--r:14px;--sh:0 1px 3px rgba(0,0,0,.06),0 8px 28px rgba(0,0,0,.06)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;color:var(--text);background:var(--bg);line-height:1.7}
+.wrap{max-width:960px;margin:0 auto;padding:0 1.25rem}
+a{color:inherit}
+.btn{display:inline-block;background:var(--p);color:#fff;text-decoration:none;padding:.85rem 1.8rem;border-radius:999px;font-weight:600;font-size:1.05rem;transition:.15s}
+.btn:hover{background:var(--pd);transform:translateY(-1px)}
+.btn.gold{background:linear-gradient(135deg,#caa53d,#b8860b)}
+.btn.ghost{background:#fff;color:var(--p);border:1.5px solid var(--p)}
+
+/* hero */
+.hero{background:linear-gradient(160deg,#e7f1ea 0%,#f4f7f4 60%);padding:4rem 0 3.5rem;text-align:center}
+.serif{font-family:"Noto Serif TC",serif}
+.hero h1{font-family:"Noto Serif TC",serif;font-weight:900;font-size:2.5rem;color:var(--pd);line-height:1.3;margin-bottom:1rem}
+h2{font-family:"Noto Serif TC",serif}
+.hero .sub{font-size:1.15rem;color:var(--mut);max-width:620px;margin:0 auto 2rem}
+.hero .cta{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+.hero .note{margin-top:1rem;font-size:.85rem;color:var(--mut)}
+.badge{display:inline-block;background:#d8f0de;color:var(--pd);padding:.3rem .9rem;border-radius:999px;font-size:.85rem;font-weight:600;margin-bottom:1.2rem}
+
+section{padding:3.5rem 0}
+h2{font-size:1.8rem;color:var(--pd);text-align:center;margin-bottom:.5rem}
+.lead{text-align:center;color:var(--mut);margin-bottom:2.5rem}
+
+/* steps */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:1.5rem;box-shadow:var(--sh)}
+.card .ic{font-size:2rem;margin-bottom:.6rem}
+.card h3{color:var(--pd);font-size:1.15rem;margin-bottom:.4rem}
+.card p{color:var(--mut);font-size:.95rem}
+
+/* cases */
+.cases{background:#fff}
+.case{background:var(--bg);border:1px solid var(--b);border-radius:var(--r);padding:1.2rem 1.4rem;margin-bottom:1rem}
+.case .num{font-family:monospace;font-size:1.2rem;font-weight:700;color:var(--pd)}
+.case .tag{display:inline-block;background:#d8f0de;color:var(--pd);padding:.15rem .7rem;border-radius:999px;font-size:.8rem;margin-left:.5rem}
+.case .say{color:#7a5c00;font-weight:600;margin-top:.4rem}
+
+/* pricing */
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;align-items:stretch}
+.price{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:1.8rem 1.4rem;text-align:center;box-shadow:var(--sh);display:flex;flex-direction:column}
+.price.hot{border:2px solid var(--p);position:relative}
+.price.hot::before{content:"最受歡迎";position:absolute;top:-.8rem;left:50%;transform:translateX(-50%);background:var(--p);color:#fff;font-size:.8rem;padding:.2rem .9rem;border-radius:999px}
+.price h3{color:var(--pd);font-size:1.2rem}
+.price .amt{font-size:2.2rem;font-weight:800;color:var(--pd);margin:.5rem 0}
+.price .amt small{font-size:1rem;color:var(--mut);font-weight:400}
+.price ul{list-style:none;text-align:left;margin:1rem 0;flex:1}
+.price li{padding:.35rem 0;color:#444;font-size:.95rem}
+.price li::before{content:"✓ ";color:var(--p);font-weight:700}
+
+.faq dt{font-weight:600;color:var(--pd);margin-top:1rem}
+.faq dd{color:var(--mut);margin-left:0}
+
+footer{background:var(--pd);color:#cfe3d7;text-align:center;padding:2rem 1.25rem;font-size:.85rem}
+footer a{color:#fff}
+.disc{font-size:.78rem;color:var(--mut);text-align:center;max-width:680px;margin:2rem auto 0}
+
+@media(max-width:680px){
+  .hero h1{font-size:1.8rem}
+  .grid3,.prices{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">⚡ 一秒算號 · 81 數理 · AI 命理師</span>
+    <h1>你的手機號碼,<br>到底旺不旺?</h1>
+    <p class="sub">輸入號碼,立即算出五格吉凶、五行生克與老師斷語。<br>結合你的生辰,給你「只屬於你」的專屬解讀。</p>
+    <div class="cta">
+      <a class="btn" href="index.html">免費立即試算 →</a>
+      <a class="btn ghost" href="#price">看方案</a>
+    </div>
+    <p class="note">免費看五格吉凶 · 進階解讀與多號比較限定會員</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>三步驟,看懂你的號碼</h2>
+    <p class="lead">傳統老師批一支號碼要等、要錢;這裡一秒出結果。</p>
+    <div class="grid3">
+      <div class="card"><div class="ic">📱</div><h3>① 輸入號碼</h3><p>打上手機號,自動依老師算法切格,算出總/天/人/地/外五格。</p></div>
+      <div class="card"><div class="ic">☯️</div><h3>② 五格吉凶</h3><p>81 數理吉凶 + 五行生克,哪格旺財、哪格要注意,一眼看懂。</p></div>
+      <div class="card"><div class="ic">🔮</div><h3>③ AI 命理師解讀</h3><p>填入生辰,AI 結合你的命格給專屬建議,還能多號比較挑最旺你的。</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="cases">
+  <div class="wrap">
+    <h2>老師親批的好號,長這樣</h2>
+    <p class="lead">五行相生、財氣流通,就是一支旺號。</p>
+    <div class="case"><span class="num">0912-559-682</span><span class="tag">大吉 · 雙吉格</span><div>總格47金、人格31木、地格35土,五格皆吉,格局層層相生。</div><div class="say">「水清金白,逢財鄉」— 正財旺,適合創業、業務。</div></div>
+    <div class="case"><span class="num">0912-526-965</span><span class="tag">大吉</span><div>總格45、外格27,財星得本性。</div><div class="say">「易得意忘形,驕傲夫財,正偏財旺」</div></div>
+    <div class="case"><span class="num">0916-124-725</span><span class="tag">大吉利</span><div>人格23、外格17,大成才之格。</div><div class="say">「水清金白,大吉利」</div></div>
+  </div>
+</section>
+
+<section id="price">
+  <div class="wrap">
+    <h2>方案</h2>
+    <p class="lead">免費先試,需要深入再升級。</p>
+    <div class="prices">
+      <div class="price">
+        <h3>免費</h3>
+        <div class="amt">NT$0</div>
+        <ul><li>五格吉凶分析</li><li>五行生克</li><li>81 數理斷語</li></ul>
+        <a class="btn ghost" href="index.html">開始試算</a>
+      </div>
+      <div class="price hot">
+        <h3>單次深解</h3>
+        <div class="amt">NT$99</div>
+        <ul><li>含免費所有功能</li><li>AI 個人化命理解讀</li><li>結合生辰專屬建議</li><li>可下載報告</li></ul>
+        <a class="btn" href="index.html">立即解鎖</a>
+      </div>
+      <div class="price">
+        <h3>選號方案</h3>
+        <div class="amt">NT$399</div>
+        <ul><li>多號批次比較</li><li>挑出最旺你的號碼</li><li>好號清單 CSV</li><li>5 次深度解析</li></ul>
+        <a class="btn gold" href="index.html">選一支旺號</a>
+      </div>
+    </div>
+    <p class="disc">※ 本服務之命理分析僅供參考與娛樂,不構成任何投資、醫療或人生決策之保證。填寫之生辰資料僅用於產生解讀,不對外提供。</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="max-width:720px">
+    <h2>常見問題</h2>
+    <dl class="faq">
+      <dt>這準嗎?</dt><dd>採用傳統姓名學「五格剖象 + 81 數理 + 五行生克」,與命理老師同一套方法,程式化後即時呈現。</dd>
+      <dt>要先付費嗎?</dt><dd>不用。五格吉凶完全免費,覺得有用再升級看 AI 個人化解讀。</dd>
+      <dt>我的生辰會外洩嗎?</dt><dd>不會。生辰只用於當次解讀,不對外提供、不做他用。</dd>
+      <dt>可以幫我挑號碼嗎?</dt><dd>可以。選號方案能一次比較多支號碼,挑出最旺你的那支。</dd>
+    </dl>
+    <div style="text-align:center;margin-top:2rem"><a class="btn" href="index.html">免費立即試算 →</a></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    公號數字學 · 手機號碼五格分析<br>
+    <a href="index.html">立即試算</a> · 命理分析僅供參考娛樂<br>
+    <span style="opacity:.6">&copy; 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

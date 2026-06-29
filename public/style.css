@@ -262,6 +262,7 @@ details.advanced[open] { padding-bottom: 0.5rem; }
 .sancai .sc-flow { margin: .6rem 0 .3rem; font-size: 1rem; letter-spacing: .5px; }
 .sancai .sc-flow span { color: var(--muted); font-size: .85rem; margin: 0 .2rem; }
 .sancai .sc-desc { font-size: .92rem; color: var(--muted); }
+.sancai .sc-energy { margin: .8rem 0 .3rem; padding-top: .7rem; border-top: 1px dashed var(--border); font-size: 1rem; letter-spacing: .5px; }
 
 /* 結果淡入 */
 .fade-in { animation: fadeInUp 0.4s ease both; }

@@ -67,6 +67,7 @@ function transformResult(result) {
     fiveGrid,
     extended,
     sancai: result.sancai,
+    energyBalance: result.energyBalance,
     score: result.score,
     isPremium: result.isPremium,
     aiComment: null,

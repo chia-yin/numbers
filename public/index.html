@@ -205,12 +205,18 @@
       ].join('')
     }
 
-    function renderSancai(s) {
+    function renderSancai(s, eb) {
       const el = $('sancai')
       if (!s) { el.innerHTML = ''; return }
-      el.innerHTML = `<div class="sc-head">三才配置　<b>${s.配置}</b>　<span class="sc-luck">${s.luck}</span></div>`
+      let html = `<div class="sc-head">三才配置　<b>${s.配置}</b>　<span class="sc-luck">${s.luck}</span></div>`
         + `<div class="sc-flow">天才 ${s.天才} <span>—${s.天人關係}→</span> 人才 ${s.人才} <span>—${s.人地關係}→</span> 地才 ${s.地才}</div>`
         + `<div class="sc-desc">${s.desc}</div>`
+      if (eb) {
+        const dist = Object.entries(eb.counts).map(([w, n]) => `${w}×${n}`).join('　')
+        html += `<div class="sc-energy"><b>五行能量</b>　${dist}　<span class="sc-luck">${eb.luck}</span></div>`
+          + `<div class="sc-desc">${eb.desc}</div>`
+      }
+      el.innerHTML = html
     }
 
     function renderFiveGrid(fiveGrid) {
@@ -247,7 +253,7 @@
       resultEl.classList.remove('fade-in'); void resultEl.offsetWidth; resultEl.classList.add('fade-in')
       appliedInfo.textContent = `已套用：${data.groups.join('-')}　切法 ${data.input.match(/.{1,3}/g)?.slice(0, data.groups.length).join(' / ') ?? data.input}`
       renderVerdict(data)
-      renderSancai(data.sancai)
+      renderSancai(data.sancai, data.energyBalance)
       renderFiveGrid(data.fiveGrid)
       renderExtended(data.extended)
       // 重置 AI 區

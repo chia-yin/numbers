@@ -16,7 +16,10 @@ function formatNumbers(analyses) {
       }).join('、');
       const good = GRID.filter((k) => a.fiveGrid[k].symbol === '○').length;
       const sc = a.sancai ? `　三才${a.sancai.配置}(${a.sancai.luck})` : '';
-      return `${i + 1}. ${a.input}　五格:${grids}　吉${good}/5${sc}`;
+      const eb = a.energyBalance
+        ? `　能量:${Object.entries(a.energyBalance.counts).map(([w, n]) => `${w}${n}`).join('')}(${a.energyBalance.luck})`
+        : '';
+      return `${i + 1}. ${a.input}　五格:${grids}　吉${good}/5${sc}${eb}`;
     })
     .join('\n');
 }
@@ -45,9 +48,13 @@ export function hasProfile(profile) {
 
 function fill(template, analysisResult, profile) {
   const sc = analysisResult.sancai;
-  const sancaiText = sc
+  const eb = analysisResult.energyBalance;
+  let sancaiText = sc
     ? `三才配置 ${sc.配置}(${sc.luck}):天才${sc.天才}—${sc.天人關係}→人才${sc.人才}—${sc.人地關係}→地才${sc.地才}。${sc.desc}`
     : '(無)';
+  if (eb) {
+    sancaiText += `\n五行能量分布:${Object.entries(eb.counts).map(([w, n]) => `${w}×${n}`).join('、')}(${eb.luck})。${eb.desc}`;
+  }
   return template
     .replaceAll('{{profile}}', formatProfile(profile))
     .replaceAll('{{phone}}', analysisResult.input ?? '')

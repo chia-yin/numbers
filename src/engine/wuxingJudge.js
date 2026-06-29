@@ -74,6 +74,11 @@ function pairRelation(a, b) {
   return '被剋';
 }
 
+// 友情之剋:金剋木(如刀雕木成器,主棟梁之才、經商才能),剋中帶吉,不以凶論
+function isFriendlyRestrict(a, b) {
+  return a === '金' && b === '木';
+}
+
 // 三才:天才(天格五行)→人才(人格五行)→地才(地格五行) 的配置與吉凶
 export function computeSancai(fiveGrid) {
   const t = fiveGrid.天格.wuxing;
@@ -81,15 +86,44 @@ export function computeSancai(fiveGrid) {
   const d = fiveGrid.地格.wuxing;
   const tr = pairRelation(t, r);
   const rd = pairRelation(r, d);
-  const seg = (x) => (x === '生' || x === '比和' ? 1 : x === '剋' ? -1 : 0);
-  const score = seg(tr) + seg(rd);
+  const trFriendly = tr === '剋' && isFriendlyRestrict(t, r);
+  const rdFriendly = rd === '剋' && isFriendlyRestrict(r, d);
+  // 生/比和=+1;剋=-1,但金剋木「友情之剋」視為+1(成材歷練)
+  const seg = (rel, friendly) =>
+    rel === '生' || rel === '比和' ? 1 : rel === '剋' ? (friendly ? 1 : -1) : 0;
+  const score = seg(tr, trFriendly) + seg(rd, rdFriendly);
   let luck, desc;
   if (score >= 2) { luck = '大吉'; desc = '三才相生,氣勢順暢,根基穩、運途旺。'; }
   else if (score === 1) { luck = '吉'; desc = '三才大致相生,整體平順向上。'; }
   else if (score === 0) { luck = '平'; desc = '三才平和,無生無剋,平穩持中。'; }
   else if (score === -1) { luck = '帶凶'; desc = '三才有相剋,過程易有阻礙,須留意。'; }
   else { luck = '凶'; desc = '三才相剋重,根基不穩,宜謹慎。'; }
+  if (trFriendly || rdFriendly) desc += '當中金剋木為「友情之剋」,主棟梁之才、有經商歷練成器之象。';
   return { 天才: t, 人才: r, 地才: d, 配置: `${t}-${r}-${d}`, 天人關係: tr, 人地關係: rd, luck, desc };
+}
+
+// 五格五行能量分布:同一五行最多兩個;出現三個以上=能量過於集中、缺其他助力
+export function computeEnergyBalance(fiveGrid) {
+  const counts = {};
+  for (const key of FIVE_GRID_KEYS) {
+    const w = fiveGrid[key].wuxing;
+    counts[w] = (counts[w] || 0) + 1;
+  }
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const [dominant, dominantCount] = entries[0];
+  const kinds = entries.length;
+  let luck, desc;
+  if (dominantCount >= 3) {
+    luck = '偏弱';
+    desc = `五格中「${dominant}」出現 ${dominantCount} 次,能量過於集中、同質性高,缺乏其他五行助力。`;
+  } else if (kinds >= 4) {
+    luck = '佳';
+    desc = '五行分布均衡多元,彼此能相生相助,格局有後援。';
+  } else {
+    luck = '平';
+    desc = '五行分布尚可,能量未過度集中。';
+  }
+  return { counts, dominant, dominantCount, kinds, luck, desc };
 }
 
 export function judgeAll(phoneNumber, groupConfig = DEFAULT_GROUP_CONFIG) {
@@ -120,6 +154,7 @@ export function judgeAll(phoneNumber, groupConfig = DEFAULT_GROUP_CONFIG) {
     numerology,
     wuxingRelations,
     sancai: computeSancai(base.fiveGrid),
+    energyBalance: computeEnergyBalance(base.fiveGrid),
     score: {
       weighted,
       level: calcLevel(weighted),

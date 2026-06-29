@@ -65,6 +65,33 @@ export function calcLevel(score) {
   return '大凶';
 }
 
+// 兩五行的關係(以 a 對 b 的方向):比和 / 生(a生b,上生下) / 被生 / 剋(a剋b,上剋下) / 被剋
+function pairRelation(a, b) {
+  if (a === b) return '比和';
+  if (GENERATES[a] === b) return '生';
+  if (GENERATES[b] === a) return '被生';
+  if (RESTRICTS[a] === b) return '剋';
+  return '被剋';
+}
+
+// 三才:天才(天格五行)→人才(人格五行)→地才(地格五行) 的配置與吉凶
+export function computeSancai(fiveGrid) {
+  const t = fiveGrid.天格.wuxing;
+  const r = fiveGrid.人格.wuxing;
+  const d = fiveGrid.地格.wuxing;
+  const tr = pairRelation(t, r);
+  const rd = pairRelation(r, d);
+  const seg = (x) => (x === '生' || x === '比和' ? 1 : x === '剋' ? -1 : 0);
+  const score = seg(tr) + seg(rd);
+  let luck, desc;
+  if (score >= 2) { luck = '大吉'; desc = '三才相生,氣勢順暢,根基穩、運途旺。'; }
+  else if (score === 1) { luck = '吉'; desc = '三才大致相生,整體平順向上。'; }
+  else if (score === 0) { luck = '平'; desc = '三才平和,無生無剋,平穩持中。'; }
+  else if (score === -1) { luck = '帶凶'; desc = '三才有相剋,過程易有阻礙,須留意。'; }
+  else { luck = '凶'; desc = '三才相剋重,根基不穩,宜謹慎。'; }
+  return { 天才: t, 人才: r, 地才: d, 配置: `${t}-${r}-${d}`, 天人關係: tr, 人地關係: rd, luck, desc };
+}
+
 export function judgeAll(phoneNumber, groupConfig = DEFAULT_GROUP_CONFIG) {
   const base = analyze(phoneNumber, groupConfig);
 
@@ -92,6 +119,7 @@ export function judgeAll(phoneNumber, groupConfig = DEFAULT_GROUP_CONFIG) {
     ...base,
     numerology,
     wuxingRelations,
+    sancai: computeSancai(base.fiveGrid),
     score: {
       weighted,
       level: calcLevel(weighted),

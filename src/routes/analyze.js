@@ -66,6 +66,7 @@ function transformResult(result) {
     groupSums: result.groupSums,
     fiveGrid,
     extended,
+    sancai: result.sancai,
     score: result.score,
     isPremium: result.isPremium,
     aiComment: null,

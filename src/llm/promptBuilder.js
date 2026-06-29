@@ -15,7 +15,8 @@ function formatNumbers(analyses) {
         return `${k} ${g.value}(${g.wuxing}・${g.symbol}${g.luck})`;
       }).join('、');
       const good = GRID.filter((k) => a.fiveGrid[k].symbol === '○').length;
-      return `${i + 1}. ${a.input}　五格:${grids}　吉${good}/5`;
+      const sc = a.sancai ? `　三才${a.sancai.配置}(${a.sancai.luck})` : '';
+      return `${i + 1}. ${a.input}　五格:${grids}　吉${good}/5${sc}`;
     })
     .join('\n');
 }
@@ -43,9 +44,14 @@ export function hasProfile(profile) {
 }
 
 function fill(template, analysisResult, profile) {
+  const sc = analysisResult.sancai;
+  const sancaiText = sc
+    ? `三才配置 ${sc.配置}(${sc.luck}):天才${sc.天才}—${sc.天人關係}→人才${sc.人才}—${sc.人地關係}→地才${sc.地才}。${sc.desc}`
+    : '(無)';
   return template
     .replaceAll('{{profile}}', formatProfile(profile))
     .replaceAll('{{phone}}', analysisResult.input ?? '')
+    .replaceAll('{{sancai}}', sancaiText)
     .replaceAll('{{fiveGrid}}', JSON.stringify(analysisResult.fiveGrid, null, 2))
     .replaceAll('{{score}}', JSON.stringify(analysisResult.score))
     .replaceAll('{{extended}}', JSON.stringify(analysisResult.extended));

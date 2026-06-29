@@ -138,8 +138,8 @@ tr:last-child td { border-bottom: none; }
 #aiCommentSection {
   margin-top: 1.5rem;
   background: var(--surface);
-  border-left: 4px solid var(--primary);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 1.1rem 1.4rem;
   box-shadow: var(--shadow);
 }
@@ -254,6 +254,14 @@ details.advanced[open] { padding-bottom: 0.5rem; }
 }
 .pkg .meta { font-weight: 500; }
 .pkg .meta small { display: block; color: var(--muted); font-weight: 400; font-size: 0.82rem; }
+
+/* 三才 */
+.sancai { margin-top: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; box-shadow: var(--sh, 0 1px 3px rgba(0,0,0,.06)); }
+.sancai .sc-head { font-size: 1.05rem; color: var(--primary-dark); }
+.sancai .sc-luck { background: var(--primary); color: #fff; border-radius: 999px; padding: .1rem .7rem; font-size: .85rem; margin-left: .3rem; }
+.sancai .sc-flow { margin: .6rem 0 .3rem; font-size: 1rem; letter-spacing: .5px; }
+.sancai .sc-flow span { color: var(--muted); font-size: .85rem; margin: 0 .2rem; }
+.sancai .sc-desc { font-size: .92rem; color: var(--muted); }
 
 /* 結果淡入 */
 .fade-in { animation: fadeInUp 0.4s ease both; }

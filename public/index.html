@@ -21,26 +21,23 @@
     <a href="rank.html">批次選號・好號碼篩選</a>
   </nav>
 
-  <div id="authModal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50">
-    <div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:340px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2)">
-      <h3 id="authTitle" style="color:#1b4332;margin:0 0 .8rem">登入</h3>
-      <input id="authEmail" type="email" placeholder="電子郵件" style="width:100%;padding:.55rem;border:1px solid #e3e8e3;border-radius:8px;margin-bottom:.5rem">
-      <input id="authPw" type="password" placeholder="密碼(至少6碼)" style="width:100%;padding:.55rem;border:1px solid #e3e8e3;border-radius:8px;margin-bottom:.5rem">
+  <div id="authModal" class="modal" hidden>
+    <div class="modal-card">
+      <h3 id="authTitle">登入</h3>
+      <input id="authEmail" type="email" placeholder="電子郵件" autocomplete="email">
+      <input id="authPw" type="password" placeholder="密碼(至少 6 碼)" autocomplete="current-password">
       <div id="authErr" class="ai-error" hidden></div>
-      <button type="button" id="authSubmit" class="btn" style="width:100%">送出</button>
-      <p style="text-align:center;font-size:.85rem;margin:.7rem 0 0">
-        <a href="#" id="authToggle" style="color:#2d6a4f">沒有帳號?註冊</a> ·
-        <a href="#" id="authClose" style="color:#6b7280">關閉</a>
-      </p>
+      <button type="button" id="authSubmit" class="btn full">送出</button>
+      <p class="modal-foot"><a href="#" id="authToggle">沒有帳號?註冊</a>　·　<a href="#" id="authClose">關閉</a></p>
     </div>
   </div>
 
-  <div id="buyModal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50">
-    <div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:360px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2)">
-      <h3 style="color:#1b4332;margin:0 0 .8rem">儲值點數</h3>
+  <div id="buyModal" class="modal" hidden>
+    <div class="modal-card">
+      <h3>儲值點數</h3>
       <div id="buyList"></div>
       <div id="buyErr" class="ai-error" hidden></div>
-      <p style="text-align:center;margin:.7rem 0 0"><a href="#" id="buyClose" style="color:#6b7280;font-size:.85rem">關閉</a></p>
+      <p class="modal-foot"><a href="#" id="buyClose">關閉</a></p>
     </div>
   </div>
 
@@ -370,7 +367,7 @@
     let PAYWALL = false, ME = null
     const authModal = $('authModal'), buyModal = $('buyModal')
     let authMode = 'login'
-    function openAuth(mode) { authMode = mode || 'login'; $('authTitle').textContent = authMode === 'login' ? '登入' : '註冊'; $('authToggle').textContent = authMode === 'login' ? '沒有帳號?註冊' : '已有帳號?登入'; $('authErr').hidden = true; authModal.hidden = false }
+    function openAuth(mode) { buyModal.hidden = true; authMode = mode || 'login'; $('authTitle').textContent = authMode === 'login' ? '登入' : '註冊'; $('authToggle').textContent = authMode === 'login' ? '沒有帳號?註冊' : '已有帳號?登入'; $('authErr').hidden = true; authModal.hidden = false }
     function renderAuth() {
       $('authbar').hidden = !PAYWALL
       if (!PAYWALL) return
@@ -391,17 +388,17 @@
       const res = await fetch(`/api/auth/${authMode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
       const data = await res.json()
       if (!res.ok) { $('authErr').hidden = false; $('authErr').textContent = data.error || '失敗'; return }
-      ME = data.user; authModal.hidden = false; authModal.hidden = true; renderAuth()
+      ME = data.user; authModal.hidden = true; $('authEmail').value = ''; $('authPw').value = ''; renderAuth()
     })
     $('logoutLink').addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST' }); ME = null; renderAuth() })
     // 儲值
     $('buyLink').addEventListener('click', openBuy)
     $('buyClose').addEventListener('click', (e) => { e.preventDefault(); buyModal.hidden = true })
     async function openBuy() {
-      buyModal.hidden = false; $('buyErr').hidden = true
+      authModal.hidden = true; buyModal.hidden = false; $('buyErr').hidden = true
       const { packages, enabled } = await (await fetch('/api/pay/packages')).json()
       $('buyList').innerHTML = Object.entries(packages).map(([k, p]) =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e3e8e3;border-radius:8px;padding:.7rem .9rem;margin-bottom:.5rem"><span>${p.name}<br><small style="color:#6b7280">${p.credits} 點</small></span><button type="button" class="btn buyBtn" data-pkg="${k}">NT$${p.amount}</button></div>`).join('')
+        `<div class="pkg"><span class="meta">${p.name}<small>${p.credits} 點</small></span><button type="button" class="btn buyBtn" data-pkg="${k}">NT$${p.amount}</button></div>`).join('')
       document.querySelectorAll('.buyBtn').forEach((b) => b.addEventListener('click', () => buy(b.dataset.pkg, enabled)))
     }
     async function buy(pkg, enabled) {

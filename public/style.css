@@ -227,6 +227,34 @@ details.advanced[open] { padding-bottom: 0.5rem; }
 .ai-output .loading { color: var(--muted); }
 .ai-error { color: #8a1c28; background: #fad9dd; padding: 0.7rem 0.9rem; border-radius: 8px; margin-top: 0.8rem; font-size: 0.9rem; }
 
+/* ── 彈窗 ── */
+.modal { position: fixed; inset: 0; background: rgba(20, 30, 24, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem; }
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.6rem 1.3rem;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+  animation: fadeInUp 0.25s ease both;
+}
+.modal-card h3 { color: var(--primary-dark); margin: 0 0 1rem; font-size: 1.25rem; }
+.modal-card input {
+  width: 100%; padding: 0.65rem 0.8rem; margin-bottom: 0.7rem;
+  border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit;
+}
+.modal-card input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(45,106,79,0.12); }
+.modal-card .full { width: 100%; }
+.modal-foot { text-align: center; margin: 0.9rem 0 0; font-size: 0.88rem; color: var(--muted); }
+.modal-foot a { color: var(--primary); text-decoration: none; }
+.modal-foot a:hover { text-decoration: underline; }
+.pkg {
+  display: flex; justify-content: space-between; align-items: center;
+  border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.6rem;
+}
+.pkg .meta { font-weight: 500; }
+.pkg .meta small { display: block; color: var(--muted); font-weight: 400; font-size: 0.82rem; }
+
 /* 結果淡入 */
 .fade-in { animation: fadeInUp 0.4s ease both; }
 @keyframes fadeInUp {

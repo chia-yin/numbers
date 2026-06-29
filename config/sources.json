@@ -44,6 +44,14 @@
     "note": "需在 .env 設 FET_ACCOUNT / FET_PASSWORD。心生活兩段式登入後,逐前綴打 queryAvailableMsisdn API 收號。風控出現必填驗證碼時自動登入會失敗。prefixes 留空＝自動讀頁面全部前綴。"
   },
   {
+    "id": "fet-select",
+    "name": "遠傳精選門號（內建清單）",
+    "type": "static",
+    "file": "fet-snapshot.json",
+    "enabled": true,
+    "note": "把本機抓好的遠傳號碼隨程式部署的靜態清單。線上免瀏覽器/帳密即可載入。更新方式:本機重抓遠傳後,將 data/crawl/fet-ecare-booking.json 另存為 config/fet-snapshot.json 再推送。"
+  },
+  {
     "id": "example-url",
     "name": "示範:靜態 URL 來源(fetch)",
     "type": "url",

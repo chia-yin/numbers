@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { extractFromHtml, extractFromText } from './parser.js';
 import { fetchViaBrowser } from './browser.js';
 import { fetchCht } from './cht.js';
@@ -6,9 +9,20 @@ import { checkRobots, sleep } from './politeness.js';
 
 const USER_AGENT = 'gonghao-numbers-crawler/1.0 (educational; contact: see package.json)';
 
+const configDir = join(dirname(fileURLToPath(import.meta.url)), '../../config');
+
 export async function fetchCandidates(source) {
   if (source.type === 'text') {
     return extractFromText(source.content ?? '');
+  }
+
+  // 內建靜態號碼(把本機抓好的清單隨程式部署,線上免瀏覽器/帳密即可用)
+  if (source.type === 'static') {
+    const safe = String(source.file ?? '').replace(/[^a-zA-Z0-9._一-鿿-]/g, '');
+    if (!safe) throw new Error('static 來源缺少 file');
+    const raw = await readFile(join(configDir, safe), 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : data.candidates ?? [];
   }
 
   if (source.type === 'url') {

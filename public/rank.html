@@ -139,14 +139,22 @@
     function updateSourceMode() {
       const source = getSelectedSource()
       const isText = !source || source.type === 'text'
+      const isStatic = source?.type === 'static'
       manualLabel.hidden = !isText
       crawlControls.hidden = isText
+      crawlBtn.textContent = isStatic ? '載入內建號碼' : '重新抓取'
       if (!isText) { crawledCandidates = []; crawlPreview.textContent = ''; showCacheInfo() }
     }
 
     // 顯示此來源的上次抓取紀錄,有則開放「載入上次紀錄」
     function showCacheInfo() {
       const source = getSelectedSource()
+      // 內建靜態來源:免快取,直接按「載入內建號碼」
+      if (source?.type === 'static') {
+        cacheInfo.textContent = `內建清單（隨程式部署，免抓取）`
+        loadCacheBtn.hidden = true
+        return
+      }
       const snap = cacheList.find((s) => s.sourceId === source?.id)
       if (snap) {
         cacheInfo.textContent = `上次抓取：${fmtTime(snap.savedAt)}　共 ${snap.count} 筆`
@@ -191,7 +199,7 @@
 
     function getCandidatesForRank() {
       const source = getSelectedSource()
-      if (source && (source.type === 'url' || source.type === 'browser')) return crawledCandidates
+      if (source && (source.type === 'url' || source.type === 'browser' || source.type === 'static')) return crawledCandidates
       return manualInput.value.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
     }
 
@@ -260,13 +268,15 @@
     crawlBtn.addEventListener('click', async () => {
       hideError()
       const source = getSelectedSource()
-      if (!source || (source.type !== 'url' && source.type !== 'browser')) { showError('此來源不支援自動抓取'); return }
-      if (!source.url) { showError('此來源缺少 URL 設定'); return }
+      if (!source || (source.type !== 'url' && source.type !== 'browser' && source.type !== 'static')) { showError('此來源不支援自動抓取'); return }
+      if ((source.type === 'url' || source.type === 'browser') && !source.url) { showError('此來源缺少 URL 設定'); return }
       const payload = source.type === 'browser'
         ? { id: source.id, type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs, iterateSelect: source.iterateSelect, cht: source.cht, fet: source.fet }
-        : { id: source.id, type: 'url', url: source.url, selector: source.selector }
+        : source.type === 'static'
+          ? { id: source.id, type: 'static', file: source.file }
+          : { id: source.id, type: 'url', url: source.url, selector: source.selector }
       crawlBtn.disabled = true
-      crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（遠傳需逐前綴抓，約十餘分鐘，請稍候）' : '抓取中…'
+      crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（遠傳需逐前綴抓，約十餘分鐘，請稍候）' : source.type === 'static' ? '載入內建號碼中…' : '抓取中…'
       try {
         const response = await fetch('/api/crawl', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

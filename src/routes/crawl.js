@@ -30,8 +30,8 @@ router.post('/', async (req, res) => {
   if (!source) {
     return res.status(400).json({ error: 'source is required' });
   }
-  if (source.type !== 'text' && source.type !== 'url' && source.type !== 'browser') {
-    return res.status(400).json({ error: "source.type must be 'text', 'url', or 'browser'" });
+  if (!['text', 'url', 'browser', 'static'].includes(source.type)) {
+    return res.status(400).json({ error: "source.type must be 'text', 'url', 'browser', or 'static'" });
   }
   if (source.type === 'text' && typeof source.content !== 'string') {
     return res.status(400).json({ error: 'source.content is required for text sources' });

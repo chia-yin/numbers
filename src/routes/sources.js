@@ -26,6 +26,7 @@ function toPublicSource(source) {
     iterateSelect: source.iterateSelect,
     cht: source.cht,
     fet: source.fet,
+    file: source.file,
   };
 }
 
@@ -40,7 +41,8 @@ router.get('/', (req, res) => {
     .filter(
       (source) =>
         source.type === 'text' ||
-        ((source.type === 'url' || source.type === 'browser') && source.enabled === true),
+        ((source.type === 'url' || source.type === 'browser' || source.type === 'static') &&
+          source.enabled === true),
     )
     .filter((source) => !(noPlaywright && source.type === 'browser' && !source.cht))
     .map(toPublicSource);

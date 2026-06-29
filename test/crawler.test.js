@@ -254,7 +254,7 @@ describe('crawler API', () => {
     });
 
     assert.equal(response.status, 400);
-    assert.deepEqual(response.body, { error: "source.type must be 'text', 'url', or 'browser'" });
+    assert.deepEqual(response.body, { error: "source.type must be 'text', 'url', 'browser', or 'static'" });
   });
 
   test('GET /api/crawl/sources returns configured source array', async () => {

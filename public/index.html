@@ -7,12 +7,42 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+  <div id="authbar" hidden style="display:flex;justify-content:flex-end;align-items:center;gap:.6rem;font-size:.9rem;margin-bottom:.5rem">
+    <span id="authInfo"></span>
+    <button type="button" id="loginLink" class="btn" style="padding:.35rem .9rem;font-size:.85rem">登入 / 註冊</button>
+    <button type="button" id="buyLink" class="btn" style="padding:.35rem .9rem;font-size:.85rem;background:#b8860b;display:none">儲值點數</button>
+    <button type="button" id="logoutLink" style="display:none;background:none;border:none;color:#6b7280;cursor:pointer;font-size:.85rem">登出</button>
+  </div>
+
   <h1>公號數字學 — 手機號碼五格分析</h1>
 
   <nav class="topnav">
     <a href="index.html" class="active">單號分析</a>
     <a href="rank.html">批次選號・好號碼篩選</a>
   </nav>
+
+  <div id="authModal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50">
+    <div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:340px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2)">
+      <h3 id="authTitle" style="color:#1b4332;margin:0 0 .8rem">登入</h3>
+      <input id="authEmail" type="email" placeholder="電子郵件" style="width:100%;padding:.55rem;border:1px solid #e3e8e3;border-radius:8px;margin-bottom:.5rem">
+      <input id="authPw" type="password" placeholder="密碼(至少6碼)" style="width:100%;padding:.55rem;border:1px solid #e3e8e3;border-radius:8px;margin-bottom:.5rem">
+      <div id="authErr" class="ai-error" hidden></div>
+      <button type="button" id="authSubmit" class="btn" style="width:100%">送出</button>
+      <p style="text-align:center;font-size:.85rem;margin:.7rem 0 0">
+        <a href="#" id="authToggle" style="color:#2d6a4f">沒有帳號?註冊</a> ·
+        <a href="#" id="authClose" style="color:#6b7280">關閉</a>
+      </p>
+    </div>
+  </div>
+
+  <div id="buyModal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50">
+    <div style="background:#fff;border-radius:14px;padding:1.5rem;max-width:360px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.2)">
+      <h3 style="color:#1b4332;margin:0 0 .8rem">儲值點數</h3>
+      <div id="buyList"></div>
+      <div id="buyErr" class="ai-error" hidden></div>
+      <p style="text-align:center;margin:.7rem 0 0"><a href="#" id="buyClose" style="color:#6b7280;font-size:.85rem">關閉</a></p>
+    </div>
+  </div>
 
   <form id="analyzeForm">
     <label>
@@ -264,6 +294,8 @@
         })
         const data = await res.json()
         if (!res.ok) { aiOutput.hidden = true; aiError.hidden = false; aiError.textContent = data.error || '解析失敗'; return }
+        if (data.locked) { aiOutput.hidden = true; aiError.hidden = false; aiError.textContent = data.locked === 'login' ? '請先登入會員' : '點數不足,請先儲值'; if (window.handleLocked) window.handleLocked(data.locked); return }
+        if (typeof data.credits === 'number' && window.applyCredits) { window.applyCredits(data.credits) }
         if (!data.aiComment) {
           aiOutput.hidden = true; aiError.hidden = false
           aiError.textContent = 'AI 解析未產生內容。請確認伺服器啟動時 claude CLI 已登入（或改用 OpenAI）。'
@@ -312,6 +344,8 @@
         const res = await fetch('/api/analyze/multi?aiComment=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phones, profile: getProfile() }) })
         const data = await res.json()
         if (!res.ok) { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = data.error || '分析失敗'; return }
+        if (data.locked) { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = data.locked === 'login' ? '請先登入會員' : '點數不足,請先儲值'; if (window.handleLocked) window.handleLocked(data.locked); return }
+        if (typeof data.credits === 'number' && window.applyCredits) window.applyCredits(data.credits)
         if (!data.aiComment) { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = 'AI 未產生內容(可改用「產生提示詞」貼去自己的 AI)'; return }
         multiOut.innerHTML = renderMarkdown(data.aiComment)
       } catch { multiOut.hidden = true; multiError.hidden = false; multiError.textContent = '無法連線至伺服器' }
@@ -332,9 +366,62 @@
       catch { multiPromptBox.select() }
     })
 
-    // AI 關閉時(部署/送人版)移除 AI 進階區
+    // ── 帳號 / 付費牆 ──
+    let PAYWALL = false, ME = null
+    const authModal = $('authModal'), buyModal = $('buyModal')
+    let authMode = 'login'
+    function openAuth(mode) { authMode = mode || 'login'; $('authTitle').textContent = authMode === 'login' ? '登入' : '註冊'; $('authToggle').textContent = authMode === 'login' ? '沒有帳號?註冊' : '已有帳號?登入'; $('authErr').hidden = true; authModal.hidden = false }
+    function renderAuth() {
+      $('authbar').hidden = !PAYWALL
+      if (!PAYWALL) return
+      if (ME) {
+        $('authInfo').textContent = `${ME.email}　點數 ${ME.credits}`
+        $('loginLink').style.display = 'none'; $('logoutLink').style.display = ''; $('buyLink').style.display = ''
+      } else {
+        $('authInfo').textContent = ''
+        $('loginLink').style.display = ''; $('logoutLink').style.display = 'none'; $('buyLink').style.display = 'none'
+      }
+    }
+    async function refreshMe() { try { ME = (await (await fetch('/api/auth/me')).json()).user } catch { ME = null } renderAuth() }
+    $('loginLink').addEventListener('click', () => openAuth('login'))
+    $('authClose').addEventListener('click', (e) => { e.preventDefault(); authModal.hidden = true })
+    $('authToggle').addEventListener('click', (e) => { e.preventDefault(); openAuth(authMode === 'login' ? 'register' : 'login') })
+    $('authSubmit').addEventListener('click', async () => {
+      const email = $('authEmail').value.trim(), password = $('authPw').value
+      const res = await fetch(`/api/auth/${authMode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+      const data = await res.json()
+      if (!res.ok) { $('authErr').hidden = false; $('authErr').textContent = data.error || '失敗'; return }
+      ME = data.user; authModal.hidden = false; authModal.hidden = true; renderAuth()
+    })
+    $('logoutLink').addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST' }); ME = null; renderAuth() })
+    // 儲值
+    $('buyLink').addEventListener('click', openBuy)
+    $('buyClose').addEventListener('click', (e) => { e.preventDefault(); buyModal.hidden = true })
+    async function openBuy() {
+      buyModal.hidden = false; $('buyErr').hidden = true
+      const { packages, enabled } = await (await fetch('/api/pay/packages')).json()
+      $('buyList').innerHTML = Object.entries(packages).map(([k, p]) =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #e3e8e3;border-radius:8px;padding:.7rem .9rem;margin-bottom:.5rem"><span>${p.name}<br><small style="color:#6b7280">${p.credits} 點</small></span><button type="button" class="btn buyBtn" data-pkg="${k}">NT$${p.amount}</button></div>`).join('')
+      document.querySelectorAll('.buyBtn').forEach((b) => b.addEventListener('click', () => buy(b.dataset.pkg, enabled)))
+    }
+    async function buy(pkg, enabled) {
+      if (!enabled) { $('buyErr').hidden = false; $('buyErr').textContent = '金流設定中,暫時無法購買。'; return }
+      // TODO: TapPay SDK 取得 prime 後送出;keys 到位後接上
+      $('buyErr').hidden = false; $('buyErr').textContent = 'TapPay 前端尚未接上(待 app_id/app_key)'
+    }
+    // locked 處理:給 AI 流程呼叫
+    window.handleLocked = (locked) => {
+      if (locked === 'login') { openAuth('login') }
+      else if (locked === 'credit') { openBuy() }
+    }
+    window.applyCredits = (n) => { if (ME) { ME.credits = n; renderAuth() } }
+
+    // 初始化:config + me
     fetch('/api/config').then((r) => r.json()).then((c) => {
       if (!c.ai) { const a = document.getElementById('aiSection'); if (a) a.remove() }
+      PAYWALL = !!c.paywall
+      renderAuth()
+      if (PAYWALL) refreshMe()
     }).catch(() => {})
 
     // 從 rank.html 帶號碼進來自動分析

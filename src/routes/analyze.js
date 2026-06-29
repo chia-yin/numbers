@@ -4,6 +4,19 @@ import { DEFAULT_GROUP_CONFIG } from '../engine/groupConfig.js';
 import { generateComment } from '../llm/adapter.js';
 import { buildPrompt, buildMultiPrompt } from '../llm/promptBuilder.js';
 import { autoGroup } from './rank.js';
+import { currentEmail } from '../auth/session.js';
+import { consumeCredit } from '../auth/users.js';
+
+// 付費牆:AI 解讀需登入+扣 1 點。PAYWALL!=1 時不啟用(本機/免費版直接放行)。
+// 回傳 {ok, locked} ,locked: 'login'|'credit'|null
+async function gateAi(req) {
+  if (process.env.PAYWALL !== '1') return { ok: true, locked: null };
+  const email = currentEmail(req);
+  if (!email) return { ok: false, locked: 'login' };
+  const left = await consumeCredit(email);
+  if (left < 0) return { ok: false, locked: 'credit' };
+  return { ok: true, locked: null, credits: left };
+}
 
 const WEIGHTS = {
   總格: 0.50,
@@ -111,7 +124,13 @@ router.post('/', async (req, res) => {
   }
 
   if (status === 200 && req.query.aiComment === 'true') {
-    body.aiComment = await generateComment(body, { profile: req.body?.profile });
+    const gate = await gateAi(req);
+    if (!gate.ok) {
+      body.locked = gate.locked;
+    } else {
+      body.aiComment = await generateComment(body, { profile: req.body?.profile });
+      body.credits = gate.credits;
+    }
   }
 
   res.status(status).json(body);
@@ -147,7 +166,9 @@ router.post('/multi', async (req, res) => {
   const prompt = await buildMultiPrompt(analyses, { profile: req.body?.profile });
   if (req.query.prompt === 'true') out.aiPrompt = prompt;
   if (req.query.aiComment === 'true') {
-    out.aiComment = await generateComment(null, { rawPrompt: prompt, profile: req.body?.profile });
+    const gate = await gateAi(req);
+    if (!gate.ok) out.locked = gate.locked;
+    else { out.aiComment = await generateComment(null, { rawPrompt: prompt, profile: req.body?.profile }); out.credits = gate.credits; }
   }
   res.json(out);
 });

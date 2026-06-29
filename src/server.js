@@ -4,6 +4,8 @@ import { router as analyzeRouter } from './routes/analyze.js'
 import { router as crawlRouter } from './routes/crawl.js'
 import { router as rankRouter } from './routes/rank.js'
 import { router as sourcesRouter } from './routes/sources.js'
+import { router as authRouter } from './routes/auth.js'
+import { router as payRouter } from './routes/pay.js'
 
 const app = express()
 const PORT = process.env.PORT ?? 3000
@@ -13,9 +15,14 @@ app.use('/api/analyze', analyzeRouter)
 app.use('/api/crawl', crawlRouter)
 app.use('/api/rank', rankRouter)
 app.use('/api/sources', sourcesRouter)
+app.use('/api/auth', authRouter)
+app.use('/api/pay', payRouter)
 // 前端據此決定要不要顯示 AI 區(LLM_PROVIDER=none 即關閉,部署/送人版純淨無 AI)
 app.get('/api/config', (req, res) => {
-  res.json({ ai: (process.env.LLM_PROVIDER ?? 'cli') !== 'none' })
+  res.json({
+    ai: (process.env.LLM_PROVIDER ?? 'cli') !== 'none',
+    paywall: process.env.PAYWALL === '1',
+  })
 })
 app.use(express.static('public'))
 

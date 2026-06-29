@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { fetchCandidates } from '../crawler/index.js';
+import { saveSnapshot, loadSnapshot, listSnapshots } from '../crawler/cache.js';
 
 const router = Router();
 const sourcesPath = join(dirname(fileURLToPath(import.meta.url)), '../../config/sources.json');
@@ -10,6 +11,18 @@ const sourcesPath = join(dirname(fileURLToPath(import.meta.url)), '../../config/
 router.get('/sources', async (req, res) => {
   const raw = await readFile(sourcesPath, 'utf8');
   res.status(200).json(JSON.parse(raw));
+});
+
+// 列出所有來源的快取(最近一次抓取的時間與筆數)
+router.get('/cache', async (req, res) => {
+  res.status(200).json({ snapshots: await listSnapshots() });
+});
+
+// 取某來源快取的完整號碼清單(免重抓)
+router.get('/cache/:id', async (req, res) => {
+  const snap = await loadSnapshot(req.params.id);
+  if (!snap) return res.status(404).json({ error: '尚無此來源的快取' });
+  res.status(200).json(snap);
 });
 
 router.post('/', async (req, res) => {
@@ -36,10 +49,17 @@ router.post('/', async (req, res) => {
 
   try {
     const candidates = await fetchCandidates(source);
+    // 自動存快取(以 source.id 為鍵),免下次重抓。text 來源不存。
+    let savedAt = null;
+    if (source.id && source.type !== 'text' && candidates.length > 0) {
+      const snap = await saveSnapshot(source.id, candidates).catch(() => null);
+      savedAt = snap?.savedAt ?? null;
+    }
     return res.status(200).json({
       candidates,
       sourceType: source.type,
       count: candidates.length,
+      ...(savedAt ? { savedAt } : {}),
     });
   } catch (error) {
     if (error.message === 'robots.txt disallows crawling this URL') {

@@ -51,8 +51,10 @@
       <textarea id="manualInput" rows="7" placeholder="0912345678&#10;0987654321&#10;0936102682" style="margin-top:0.3rem"></textarea>
     </label>
     <div id="crawlControls" hidden style="margin-top:0.75rem">
-      <button type="button" id="crawlBtn" class="btn">抓取號碼</button>
+      <button type="button" id="crawlBtn" class="btn">重新抓取</button>
+      <button type="button" id="loadCacheBtn" class="btn" hidden style="background:#fff;color:var(--primary-dark);border:1px solid var(--primary-dark)">載入上次紀錄</button>
       <button type="button" id="dlRawBtn" class="btn" hidden>下載抓取號碼</button>
+      <div id="cacheInfo" class="hint" style="margin-top:0.5rem"></div>
       <div id="crawlPreview" class="hint" style="margin-top:0.5rem"></div>
     </div>
   </div>
@@ -107,7 +109,9 @@
     const manualInput = $('manualInput')
     const crawlControls = $('crawlControls')
     const crawlBtn = $('crawlBtn')
+    const loadCacheBtn = $('loadCacheBtn')
     const dlRawBtn = $('dlRawBtn')
+    const cacheInfo = $('cacheInfo')
     const crawlPreview = $('crawlPreview')
     const minGoodInput = $('minGood')
     const groupsInput = $('groups')
@@ -123,6 +127,9 @@
     let sources = []
     let crawledCandidates = []
     let lastRanked = []
+    let cacheList = []
+
+    const fmtTime = (iso) => { try { return new Date(iso).toLocaleString('zh-TW', { hour12: false }) } catch { return iso } }
 
     const symbolClass = (s) => SYMBOL_CLASS[s] || ''
     const showError = (m) => { errorEl.hidden = false; errorEl.textContent = m }
@@ -134,7 +141,27 @@
       const isText = !source || source.type === 'text'
       manualLabel.hidden = !isText
       crawlControls.hidden = isText
-      if (!isText) { crawledCandidates = []; crawlPreview.textContent = '' }
+      if (!isText) { crawledCandidates = []; crawlPreview.textContent = ''; showCacheInfo() }
+    }
+
+    // 顯示此來源的上次抓取紀錄,有則開放「載入上次紀錄」
+    function showCacheInfo() {
+      const source = getSelectedSource()
+      const snap = cacheList.find((s) => s.sourceId === source?.id)
+      if (snap) {
+        cacheInfo.textContent = `上次抓取：${fmtTime(snap.savedAt)}　共 ${snap.count} 筆`
+        loadCacheBtn.hidden = false
+      } else {
+        cacheInfo.textContent = '尚無紀錄，請按「重新抓取」'
+        loadCacheBtn.hidden = true
+      }
+    }
+
+    async function loadCacheList() {
+      try {
+        const r = await fetch('/api/crawl/cache')
+        cacheList = (await r.json()).snapshots || []
+      } catch { cacheList = [] }
     }
 
     function populateSourceSelect(data) {
@@ -236,10 +263,10 @@
       if (!source || (source.type !== 'url' && source.type !== 'browser')) { showError('此來源不支援自動抓取'); return }
       if (!source.url) { showError('此來源缺少 URL 設定'); return }
       const payload = source.type === 'browser'
-        ? { type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs, iterateSelect: source.iterateSelect, cht: source.cht }
-        : { type: 'url', url: source.url, selector: source.selector }
+        ? { id: source.id, type: 'browser', url: source.url, steps: source.steps, selector: source.selector, delayMs: source.delayMs, iterateSelect: source.iterateSelect, cht: source.cht, fet: source.fet }
+        : { id: source.id, type: 'url', url: source.url, selector: source.selector }
       crawlBtn.disabled = true
-      crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（首次較慢）' : '抓取中…'
+      crawlPreview.textContent = source.type === 'browser' ? '開啟瀏覽器抓取中…（遠傳需逐前綴抓，約十餘分鐘，請稍候）' : '抓取中…'
       try {
         const response = await fetch('/api/crawl', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -251,9 +278,29 @@
         const preview = crawledCandidates.slice(0, 5).join('、')
         crawlPreview.textContent = `已抓取 ${crawledCandidates.length} 筆，前 5 筆：${preview || '（無）'}`
         dlRawBtn.hidden = crawledCandidates.length === 0
+        await loadCacheList(); showCacheInfo() // 更新「上次抓取」顯示
       } catch {
         showError('無法連線至伺服器，請確認服務是否已啟動'); crawlPreview.textContent = ''
       } finally { crawlBtn.disabled = false }
+    })
+
+    // 載入上次抓取紀錄(免重抓)
+    loadCacheBtn.addEventListener('click', async () => {
+      hideError()
+      const source = getSelectedSource()
+      if (!source?.id) return
+      loadCacheBtn.disabled = true
+      try {
+        const r = await fetch(`/api/crawl/cache/${encodeURIComponent(source.id)}`)
+        const data = await r.json()
+        if (!r.ok) { showError(data.error || '載入紀錄失敗'); return }
+        crawledCandidates = data.candidates || []
+        const preview = crawledCandidates.slice(0, 5).join('、')
+        crawlPreview.textContent = `已載入上次紀錄 ${crawledCandidates.length} 筆，前 5 筆：${preview || '（無）'}`
+        dlRawBtn.hidden = crawledCandidates.length === 0
+      } catch {
+        showError('無法連線至伺服器')
+      } finally { loadCacheBtn.disabled = false }
     })
 
     rankBtn.addEventListener('click', async () => {
@@ -279,7 +326,7 @@
       } finally { progressEl.hidden = true; rankBtn.disabled = false }
     })
 
-    document.addEventListener('DOMContentLoaded', loadSources)
+    document.addEventListener('DOMContentLoaded', async () => { await loadCacheList(); await loadSources() })
   </script>
 </body>
 </html>

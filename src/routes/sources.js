@@ -25,6 +25,7 @@ function toPublicSource(source) {
     steps: source.steps,
     iterateSelect: source.iterateSelect,
     cht: source.cht,
+    fet: source.fet,
   };
 }
 
